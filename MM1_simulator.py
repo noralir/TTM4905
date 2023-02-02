@@ -24,9 +24,12 @@ expected waiting time
 import simpy
 import numpy as np
 import csv
+import matplotlib.pyplot as plt
+import math
 
+from readcsvfile import readcsvfile
 
-SIM_TIME = 10000 #µs
+SIM_TIME = 100000 #µs
 lambda_arrival = 1/20 #1/µs || packet generated every 20 µs
 lambda_size = 1/8000 #1/bits || packet size (1/1000 1/bytes)
 
@@ -104,4 +107,19 @@ E_W = rho/(m-l) # expected waiting time
 # ---- PRINTING ---------------------------- #
 print(f"theoretical sojourn time: {E_S} \nobserved sojourn time: {O_S}")
 print(f"theoretical waiting time: {E_W} \nobserved waiting time: {O_W}")
+# ------------------------------------------ #
+
+# ---------------------- PLOT --------------- #
+fields, rows = readcsvfile("MM1_file.csv")
+delay = [row[2]+row[3] for row in rows]
+n, bins, _ = plt.hist(delay, density=True, label="actual distribution", color='aquamarine', bins=50)
+
+f = lambda l, x : l * math.e**(-l * x)
+
+plt.plot(np.arange(0, 100, 0.25), f(l ,np.arange(0, 100, 0.25)), label="theoretical value", color="blueviolet")
+plt.xlabel("delay")
+plt.title("title of plot")
+plt.legend()
+plt.show()
+
 # ------------------------------------------ #

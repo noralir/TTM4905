@@ -9,7 +9,7 @@ from readcsvfile import readcsvfile
 
 
 # GATHER DATA
-fields, rows = readcsvfile("MM1_file_dataset.csv")
+fields, rows = readcsvfile("data/MM1_file_dataset.csv")
 delay = [row[2]+row[3] for row in rows]
 
 # HISTORGAM DATA
