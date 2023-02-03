@@ -6,7 +6,7 @@ import math
 
 from readcsvfile import readcsvfile
 
-SIM_TIME = 100000 #µs
+SIM_TIME = 10000 #µs
 lambda_arrival = 1/20 #1/µs || packet generated every 20 µs
 pkt_size = 1/8000 #1/bits || packet size (1/1000 1/bytes)
 
@@ -31,7 +31,7 @@ def packetgenerator(env):
 def packet(env, number):
     global packets, waiting_time, processing_time, sojourn_time
     t_generated = env.now
-    size = pkt_size
+    size = 1/pkt_size
 
     with buffer.request() as req:
         yield req
@@ -74,10 +74,11 @@ O_W = waiting_time/packets
 # ---- THEORETICAL VALUES ------------------- #
 l = lambda_arrival
 m = 1/((1/pkt_size)/buffer_capacity*10**6)
+rho = l/m
 
 #E_Q = rho**2/(1-rho) # expected queue length
-E_S = 0 # expected sojourn time
-E_W = 0 # expected waiting time
+E_S = 1/m + rho/(2*m*(1-rho)) # expected sojourn time
+E_W = rho/(2*m*(1-rho)) # expected waiting time
 # ------------------------------------------ #
 
 # ---- PRINTING ---------------------------- #
@@ -90,8 +91,10 @@ fields, rows = readcsvfile("MM1_file.csv")
 delay = [row[2]+row[3] for row in rows]
 n, bins, _ = plt.hist(delay, density=True, label="actual distribution", color='aquamarine', bins=50)
 
-plt.plot(np.arange(0, 100, 0.25), np.arange(0, 100, 0.25)*0.01, label="theoretical value", color="blueviolet")
-plt.xlabel("delay")
+f = lambda l, x : l * math.e**(-l * x) + pkt_size
+
+plt.plot(np.arange(0, 100, 0.25), f(l, np.arange(0, 100, 0.25)), label="theoretical value", color="blueviolet")
+plt.xlabel("sojourn time")
 plt.title("title of plot")
 plt.legend()
 plt.show()

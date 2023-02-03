@@ -117,7 +117,7 @@ n, bins, _ = plt.hist(delay, density=True, label="actual distribution", color='a
 f = lambda l, x : l * math.e**(-l * x)
 
 plt.plot(np.arange(0, 100, 0.25), f(l ,np.arange(0, 100, 0.25)), label="theoretical value", color="blueviolet")
-plt.xlabel("delay")
+plt.xlabel("sojourn time")
 plt.title("title of plot")
 plt.legend()
 plt.show()
