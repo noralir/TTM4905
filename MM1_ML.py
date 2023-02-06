@@ -5,11 +5,11 @@ import math
 from sklearn.linear_model import LinearRegression
 
 # Functions from files
-from readcsvfile import readcsvfile
+from read_data_csv import read_data_csv
 
 
 # GATHER DATA
-fields, rows = readcsvfile("data/MM1_file_dataset.csv")
+fields, rows = read_data_csv("data/MM1_file_dataset.csv")
 delay = [row[2]+row[3] for row in rows]
 
 # HISTORGAM DATA
