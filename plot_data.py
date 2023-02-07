@@ -26,12 +26,12 @@ def plotMM1(filename_input, filename_data):
     # --- PLOT --------------------------- #
     plt.xlabel("Sojourn time")
     plt.ylabel("Probability")
-    plt.title("MM1")
+    plt.title("File: " + filename_data)
     plt.legend()
     plt.show()
     # ------------------------------------ #
 
+#plotMM1(filename_input="03_MM1/MM1_input.json", filename_data="03_MM1/data/33.csv")
 
-#plotMM1(filename_input="01_MM1/MM1_input.json", filename_data="01_MM1/MM1_data/MM1_0_data.csv")
-for i in [0, 10, 100, 1000, 10000]:
-    plotMM1(filename_input="01_MM1/MM1_input.json", filename_data="01_MM1/nth_packet/" + str(i) + ".csv")
+for i in [0, 10, 100, 1000, 10000, 100000]:
+    plotMM1(filename_input="03_MM1/MM1_input.json", filename_data="03_MM1/nth/" + str(i) + ".csv")
