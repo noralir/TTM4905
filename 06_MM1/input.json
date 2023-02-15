@@ -1,0 +1,9 @@
+{
+    "avg_pkt_ia_time": [1700], 
+    "dist_type_pkt_ia_time": ["M"], 
+    "avg_pkt_len_bits": [1000], 
+    "variance_pkt_len_bits": [0], 
+    "dist_type_pkt_len": ["M"],
+    "capacity": 1, 
+    "num_pkts": [100000]
+}
