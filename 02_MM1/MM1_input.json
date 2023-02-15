@@ -1,0 +1,9 @@
+{
+    "avg_pkt_ia_time_us": 15, 
+    "dist_type_pkt_ia_time": "M", 
+    "avg_pkt_len_bits": 8000, 
+    "variance_pkt_len_bits": 0, 
+    "dist_type_pkt_len": "M",
+    "capacity_bps": 1000000000,
+    "num_pkts": 1000000
+}
