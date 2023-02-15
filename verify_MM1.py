@@ -66,4 +66,4 @@ def plotwaitMM1(filename_input, input_index, filename_data):
 
 
 plotsojournMM1(filename_input="05_MM1-MD1/input.json", input_index=0, filename_data="05_MM1-MD1/MM1/0.csv")
-plotwaitMM1(filename_input="05_MM1-MD1/input.json", input_index=0, filename_data="05_MM1-MD1/MM1/0.csv")
+#plotwaitMM1(filename_input="05_MM1-MD1/input.json", input_index=0, filename_data="05_MM1-MD1/MM1/0.csv")
