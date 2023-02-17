@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 import json
+import scipy.stats as stats
 from readdatacsv import read_data_csv
 
 def plotsojournMM1(filename_input, input_index, filename_data):
@@ -15,14 +16,22 @@ def plotsojournMM1(filename_input, input_index, filename_data):
         np.arange(0, 20000, 100), 
         f(mu_,lambda_, np.arange(0, 20000, 100)), 
         label="Theoretical distribution", 
-        color="blueviolet"
+        color="forestgreen"
     )
     # ------------------------------------ #
 
     # --- SIMULATION --------------------- #
+    print("start read data")
     fields_data, rows_data = read_data_csv(filename_data)
+    print("end read data")
+    print(rows_data.shape)
+    print("start delay")
     delay = [row[2]+row[3] for row in rows_data]
-    plt.hist(delay, density=True, label="Simulation data", color='aquamarine', bins=200)
+    print("end delay")
+    n, x, _ = plt.hist(delay, density=True, label="Simulation data", color='palegreen', bins=500)
+
+    #test = stats.fit(delay)
+    plt.plot(x[:-1], n, label="Simulation data", color="springgreen")
     # ------------------------------------ #
 
 
@@ -32,6 +41,7 @@ def plotsojournMM1(filename_input, input_index, filename_data):
     plt.ylabel("Probability")
     plt.title("File: " + filename_data)
     plt.legend()
+    plt.xlim([0, 20000])
     plt.show()
     # ------------------------------------ #
 
@@ -40,20 +50,21 @@ def plotwaitMM1(filename_input, input_index, filename_data):
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     f = lambda u, l, x : 1 - l/u * math.e**(-(u-l)*x) #wait time (eq. 6.84 p 172 ttm4110 book)
+    #f = lambda u, l, x : math.e**(-(u-l)*x) #wait time (eq. 6.84 p 172 ttm4110 book)
     lambda_ = 1/input_variables["avg_pkt_ia_time"][input_index]
     mu_ = 1/((input_variables["avg_pkt_len_bits"][input_index]/input_variables["capacity"]))
     plt.plot(
         np.arange(0, 20000, 100), 
         f(mu_, lambda_, np.arange(0, 20000, 100)), 
         label="Theoretical distribution", 
-        color="blueviolet"
+        color="forestgreen"
     )
     # ------------------------------------ #
 
     # --- SIMULATION --------------------- #
     fields_data, rows_data = read_data_csv(filename_data)
     wait = [row[2] for row in rows_data]
-    plt.hist(wait, density=True, label="Simulation data", color='aquamarine', bins=200)
+    plt.hist(wait, density=False, label="Simulation data", color='palegreen', bins=200)
     # ------------------------------------ #
     
     # --- PLOT --------------------------- #
@@ -65,5 +76,8 @@ def plotwaitMM1(filename_input, input_index, filename_data):
     # ------------------------------------ #
 
 
-plotsojournMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/0.csv")
-#plotwaitMM1(filename_input="05_MM1-MD1/input.json", input_index=0, filename_data="05_MM1-MD1/MM1/0.csv")
+def plotnthMM1():
+    return
+
+plotsojournMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/1.csv")
+#plotwaitMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/1.csv")
