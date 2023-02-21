@@ -63,7 +63,7 @@ def plotwaitMM1(filename_input, input_index, filename_data):
     # --- SIMULATION --------------------- #
     fields_data, rows_data = read_data_csv(filename_data)
     wait = [row[2] for row in rows_data]
-    plt.hist(wait, density=False, label="Simulation data", color='palegreen', bins=200)
+    plt.hist(wait, density=False, label="Simulation data", color='palegreen', bins=50)
     # ------------------------------------ #
     
     # --- PLOT --------------------------- #
@@ -81,7 +81,7 @@ def plotnthMM1(filename_input, input_index, folder_nth):
         fields_data, rows_data = read_data_csv(folder_nth + file)
         delay = [row[2]+row[3] for row in rows_data]
         #n, x, _ = plt.hist(delay, density=True, label=file, bins=500)
-        n, x = np.histogram(delay, 500, density=True)
+        n, x = np.histogram(delay, 150, density=True)
         plt.plot(x[:-1], n, label=file)
     # ------------------------------------ #
 
