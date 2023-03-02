@@ -14,13 +14,13 @@ def inter_arrival_time(dist_type_pkt_ia_time, avg_pkt_ia_time):
 
 def packet_size(dist_type_pkt_len, avg_pkt_len_bits):
     if dist_type_pkt_len == 'M':
-        return int(np.random.exponential(avg_pkt_len_bits))
+        return np.random.exponential(avg_pkt_len_bits)
     elif dist_type_pkt_len == 'D':
         return avg_pkt_len_bits
     else:
         return avg_pkt_len_bits
 
-def generic_simulator(input_variables, filename_data, folder_nth):
+def generic_simulator(input_variables, filename_data = False, folder_nth = False):
 
     def packetgenerator(env):
         for i in range(len(input_variables["num_pkts"])):

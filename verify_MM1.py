@@ -98,16 +98,23 @@ def plotnthMM1(filename_input, input_index, folder_nth):
         color="forestgreen"
     )
     # ------------------------------------ #
+    f2 = lambda u, x : u*math.e**(-(u)*x)
+    plt.plot(
+        np.arange(0, 20000, 100), 
+        f2(mu_,np.arange(0, 20000, 100)), 
+        label="Theoretical distribution", 
+        color="red"
+    )
 
     # --- PLOT --------------------------- #
     plt.xlabel("Sojourn time")
     plt.ylabel("Probability")
     plt.title("Folder: " + folder_nth)
     plt.legend()
-    plt.xlim([0, 10000])
+    plt.xlim([0, 3000])
     plt.show()
     # ------------------------------------ #
 
-#plotsojournMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/0.csv")
+plotsojournMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/0.csv")
 #plotwaitMM1(filename_input="06_MM1/input.json", input_index=0, filename_data="06_MM1/data/1.csv")
-plotnthMM1(filename_input="06_MM1/input.json", input_index=0, folder_nth="06_MM1/nth/0/")
+#plotnthMM1(filename_input="06_MM1/input.json", input_index=0, folder_nth="06_MM1/nth/0/")

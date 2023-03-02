@@ -10,7 +10,7 @@ def read_data_csv(filename):
                      float(row[1]), 
                      float(row[2]), 
                      float(row[3]), 
-                     int(row[4]), 
+                     float(row[4]), 
                      int(row[5])
               ], np.float32) for row in csvreader])
        return fields, rows

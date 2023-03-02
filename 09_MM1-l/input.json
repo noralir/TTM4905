@@ -1,0 +1,10 @@
+{
+    "lambda": [0.5, 0.6, 0.8, 0.5, 0.6],
+    "avg_pkt_ia_time": [20, 16.7, 12.5, 20, 16.7], 
+    "dist_type_pkt_ia_time": ["M", "M", "M", "M", "M"], 
+    "avg_pkt_len_bits": [10, 10, 10, 10, 10], 
+    "variance_pkt_len_bits": [0, 0, 0, 0, 0], 
+    "dist_type_pkt_len": ["M", "M", "M", "M", "M"], 
+    "capacity": 1, 
+    "num_pkts": [1000, 1000, 1000, 1000, 1000]
+}
