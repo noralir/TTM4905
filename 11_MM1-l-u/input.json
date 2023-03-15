@@ -3,10 +3,10 @@
     "avg_pkt_ia_time": [66.667, 40.000, 22.222, 66.667, 40.000], 
     "dist_type_pkt_ia_time": ["M", "M", "M", "M", "M"], 
 
-    "avg_pkt_len_bits": [6, 10, 18, 6, 10], 
+    "avg_pkt_len_bits": [6, 10, 16, 6, 10], 
     "variance_pkt_len_bits": [0, 0, 0, 0, 0], 
     "dist_type_pkt_len": ["M", "M", "M", "M", "M"], 
 
     "capacity": 1, 
-    "num_pkts": [1000, 1000, 1000, 1000, 1000]
+    "num_pkts": [20000, 20000, 20000, 20000, 20000]
 }

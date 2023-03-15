@@ -82,6 +82,9 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
         if filename_data:
             writer.writerow([number, t_generated, t_buffer, t_processing, pkt_size_bits, n_in_queue])
         if number in [0, 10, 100, 1000, 10000, 100000, 1000000] and folder_nth:
+            folder_path = folder_nth + str(dist_i)
+            if not os.path.exists(folder_path):
+                os.makedirs(folder_path)
             filename = folder_nth + str(dist_i) + '/' + str(number) +'.csv'
             exist = os.path.isfile(filename)
             with open(filename, 'a', newline='') as fileN:
