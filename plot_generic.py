@@ -26,6 +26,7 @@ def plot_gen(filename_input, filename_data):
             y = waitMM1(mu_list[i], lambda_list[i], x)
         elif dist_type == "MD":
             y = waitMD1(mu_list[i], lambda_list[i], x)
+            plt.yscale("log")
         plt.plot(x, y, label="theoretical #" + str(i) + " l = " + str(1/input_variables["avg_pkt_ia_time"][i]))
         
     
