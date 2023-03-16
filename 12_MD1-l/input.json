@@ -1,0 +1,12 @@
+{
+    "lambda": [0.015, 0.025, 0.045, 0.015, 0.025],
+    "avg_pkt_ia_time": [66.667, 40.000, 22.222, 66.667, 40.000], 
+    "dist_type_pkt_ia_time": ["M", "M", "M", "M", "M"], 
+
+    "avg_pkt_len_bits": [12, 12, 12, 12, 12], 
+    "variance_pkt_len_bits": [0, 0, 0, 0, 0], 
+    "dist_type_pkt_len": ["D", "D", "D", "D", "D"], 
+
+    "capacity": 1, 
+    "num_pkts": [10000, 10000, 10000, 10000, 10000]
+}

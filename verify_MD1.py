@@ -94,6 +94,6 @@ def plottheoreticalMD1(filename_input, input_index=0):
    
 
 #------------------------------------ RUN ------------------------------------#
-plotMD1(filename_input="08_MD1/input.json", input_index=0, filename_data="08_MD1/data/0.csv")
+#plotMD1(filename_input="07_MD1/input.json", input_index=0, filename_data="07_MD1/data/0.csv")
 #plotnthMD1(filename_input="07_MD1/input.json", input_index=0, folder_nth="07_MD1/nth/0/")
-#plottheoreticalMD1(filename_input="08_MD1/input.json")
+plottheoreticalMD1(filename_input="08_MD1/input.json")
