@@ -1,5 +1,5 @@
 from run_sim_generic import run_simulator
-from plot_generic import plot_gen_file, plot_gen_nth_sojourn
+from plot_generic import plot_gen_file, plot_gen_nth
 
 folder="13_MD1-l-u/"
 
