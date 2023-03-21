@@ -60,7 +60,8 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                                                  variance_pkt_len_bits = 0))
             env.process(packet(env=env, 
                                pkt_size_bits=packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][index][priority] if type(input_variables["dist_type_pkt_len"][index]) == type([]) else input_variables["dist_type_pkt_len"][index], 
-                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][priority] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index]), 
+                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][priority] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index],
+                                                         variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index][priority] if type(input_variables["variance_pkt_len_bits"][index]) == type([]) else input_variables["variance_pkt_len_bits"][index]), 
                                number=str(priority)+str(j), 
                                dist_i=index, 
                                priority = priority))
