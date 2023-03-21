@@ -1,0 +1,12 @@
+{
+    "lambda": [0.025],
+    "avg_pkt_ia_time": [40.000], 
+    "dist_type_pkt_ia_time": ["M"], 
+
+    "avg_pkt_len_bits": [12], 
+    "variance_pkt_len_bits": [12], 
+    "dist_type_pkt_len": ["G_uniform"], 
+
+    "capacity": 1, 
+    "num_pkts": [100000]
+}

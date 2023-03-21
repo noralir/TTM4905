@@ -13,16 +13,16 @@ def inter_arrival_time(dist_type_pkt_ia_time, avg_pkt_ia_time, variance_pkt_len_
         return avg_pkt_ia_time
     elif dist_type_pkt_ia_time == 'G_uniform':
         return np.random.uniform(avg_pkt_ia_time-variance_pkt_len_bits, avg_pkt_ia_time+variance_pkt_len_bits)
-    else:
-        return avg_pkt_ia_time # D is standard
+    return avg_pkt_ia_time # D is standard
 
-def packet_size(dist_type_pkt_len, avg_pkt_len_bits):
+def packet_size(dist_type_pkt_len, avg_pkt_len_bits, variance_pkt_len_bits):
     if dist_type_pkt_len == 'M':
         return np.random.exponential(avg_pkt_len_bits)
     elif dist_type_pkt_len == 'D':
         return avg_pkt_len_bits
-    else:
-        return avg_pkt_len_bits
+    elif dist_type_pkt_len == 'G_uniform':
+        return np.random.uniform(avg_pkt_len_bits-variance_pkt_len_bits, avg_pkt_len_bits+variance_pkt_len_bits)
+    return avg_pkt_len_bits
 
 def generic_simulator(input_variables, filename_data = False, folder_nth = False):
 
@@ -33,7 +33,7 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                 num_pkts = input_variables["num_pkts"][k] / input_variables["num_sources"][k] # number of pkt per source
                 for i in range(input_variables["num_sources"][k]):
                     env.process(sub_packetgenerator(env=env, priority=i, num_pkts=num_pkts, index=k))
-                while len(check_list) < input_variables["num_sources"][k]:
+                while len(check_list) < input_variables["num_sources"][k]: # Don't start next round before all are finished
                     yield env.timeout(1)
                 check_list = []
         else: # Only one class, no priority
@@ -45,7 +45,8 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                                                          variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][i]))
                     env.process(packet(env = env, 
                                        pkt_size_bits = packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][i], 
-                                                                   avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i]), 
+                                                                   avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i],
+                                                                   variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][i]), 
                                        number = j, 
                                        dist_i = i))
                     j += 1
