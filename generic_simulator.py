@@ -29,11 +29,21 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
     def packetgenerator(env):
         global check_list
         if "num_sources" in input_variables:
+
             for k in range(len(input_variables["num_pkts"])): # index k in input-file
-                num_pkts = input_variables["num_pkts"][k] / input_variables["num_sources"][k] # number of pkt per source
-                for i in range(input_variables["num_sources"][k]):
-                    env.process(sub_packetgenerator(env=env, priority=i, num_pkts=num_pkts, index=k))
-                while len(check_list) < input_variables["num_sources"][k]: # Don't start next round before all are finished
+                '''
+                EXAMPLES
+                num_sources_k = [0,1,2]
+                num_pkts_k = [100, 100, 100]
+                '''
+                # If there is a list at index k, keep it, if not change to a list with priority getting lower, e.g. 3 turns into [0,1,2]
+                num_sources_k = input_variables["num_sources"][k] if type(input_variables["num_sources"][k]) == type([]) else [i for i in range(input_variables["num_sources"][k])]
+                num_pkts_k = input_variables["num_pkts"][k] if type(input_variables["num_pkts"][k]) == type([]) else [input_variables["num_pkts"][k]/len(num_sources_k) for i in range(len(num_sources_k))]
+                # Start subgenerators
+                for i in range(len(num_sources_k)):
+                    env.process(sub_packetgenerator(env=env, priority=num_sources_k[i], num_pkts=num_pkts_k[i], index=k, subindex=i))
+                # Don't start next round before all are finished
+                while len(check_list) < len(num_sources_k): 
                     yield env.timeout(1)
                 check_list = []
         else: # Only one class, no priority
@@ -52,17 +62,17 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                     j += 1
                 j = 0
     
-    def sub_packetgenerator(env, priority, num_pkts, index):
+    def sub_packetgenerator(env, priority, num_pkts, index, subindex):
         j = 0
         while j <= num_pkts:
-            yield env.timeout(inter_arrival_time(dist_type_pkt_ia_time=input_variables["dist_type_pkt_ia_time"][index], 
-                                                 avg_pkt_ia_time=input_variables["avg_pkt_ia_time"][index], 
-                                                 variance_pkt_len_bits = 0))
+            yield env.timeout(inter_arrival_time(dist_type_pkt_ia_time=input_variables["dist_type_pkt_ia_time"][index] if type(input_variables["dist_type_pkt_ia_time"][index]) == type("M") else input_variables["dist_type_pkt_ia_time"][index][subindex], 
+                                                 avg_pkt_ia_time=input_variables["avg_pkt_ia_time"][index] if type(input_variables["avg_pkt_ia_time"][index]) == type(1) else input_variables["avg_pkt_ia_time"][index][subindex], 
+                                                 variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index] if type(input_variables["variance_pkt_len_bits"][index]) == type(1) else input_variables["variance_pkt_len_bits"][index][subindex]))
             env.process(packet(env=env, 
-                               pkt_size_bits=packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][index][priority] if type(input_variables["dist_type_pkt_len"][index]) == type([]) else input_variables["dist_type_pkt_len"][index], 
-                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][priority] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index],
-                                                         variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index][priority] if type(input_variables["variance_pkt_len_bits"][index]) == type([]) else input_variables["variance_pkt_len_bits"][index]), 
-                               number=str(priority)+str(j), 
+                               pkt_size_bits=packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][index][subindex] if type(input_variables["dist_type_pkt_len"][index]) == type([]) else input_variables["dist_type_pkt_len"][index], 
+                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][subindex] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index],
+                                                         variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index][subindex] if type(input_variables["variance_pkt_len_bits"][index]) == type([]) else input_variables["variance_pkt_len_bits"][index]), 
+                               number=str(subindex)+str(priority)+str(j), 
                                dist_i=index, 
                                priority = priority))
             j += 1

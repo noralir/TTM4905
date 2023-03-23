@@ -1,13 +1,13 @@
 {
     "lambda": [0],
-    "avg_pkt_ia_time": [120.000], 
+    "avg_pkt_ia_time": [[40, 40, 40]], 
     "dist_type_pkt_ia_time": ["M"], 
 
     "avg_pkt_len_bits": [12], 
     "variance_pkt_len_bits": [12], 
-    "dist_type_pkt_len": ["G_uniform"], 
+    "dist_type_pkt_len": [["D", "G_uniform", "M"]], 
 
     "capacity": 1, 
-    "num_pkts": [100000],
-    "num_sources" : [3]
+    "num_pkts": [[5000, 5000, 5000]],
+    "num_sources" : [[0,1,2]]
 }

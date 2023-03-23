@@ -5,15 +5,15 @@ import json
 import os
 from readdatacsv import read_data_csv
 
-wait_pdf_MM1 = lambda u, l, t : 0
+wait_pdf_MM1 = lambda u, l, t : False #TODO
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
-sojourn_cdf_MM1 = lambda u, l, t : 0
+sojourn_cdf_MM1 = lambda u, l, t : False #TODO
 
-wait_pdf_MD1 = lambda u, l, t : 0
+wait_pdf_MD1 = lambda u, l, t : False #TODO
 wait_cdf_MD1 = lambda u, l, t : [((1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t]
-sojourn_pdf_MD1 = lambda u, l, t : 0
-sojourn_cdf_MD1 = lambda u, l, t : 0
+sojourn_pdf_MD1 = lambda u, l, t : False #TODO
+sojourn_cdf_MD1 = lambda u, l, t : False #TODO
 
 sojourn_MD1_not_working = lambda u, l, t : [( (1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t] #TODO: not working
 
@@ -22,10 +22,8 @@ def get_y_theoretical(u, l, t, dist_type, plot_type):
     if dist_type == "MM" and plot_type == "wait_cdf":
         return wait_cdf_MM1(u, l, t)
     elif dist_type == "MM" and plot_type == "wait_pdf":
-        return False
         return wait_pdf_MM1(u, l, t)
     elif dist_type == "MM" and plot_type == "sojourn_cdf":
-        return False
         return sojourn_cdf_MM1(u, l, t)
     elif dist_type == "MM" and plot_type == "sojourn_pdf":
         return sojourn_pdf_MM1(u, l, t)
@@ -34,13 +32,10 @@ def get_y_theoretical(u, l, t, dist_type, plot_type):
     elif dist_type == "MD" and plot_type == "wait_cdf":
         return wait_cdf_MD1(u, l, t)
     elif dist_type == "MD" and plot_type == "wait_pdf":
-        return False
         return wait_pdf_MD1(u, l, t)
     elif dist_type == "MD" and plot_type == "sojourn_cdf":
-        return False
         return sojourn_cdf_MD1(u, l, t)
     elif dist_type == "MD" and plot_type == "sojourn_pdf":
-        return False
         return sojourn_pdf_MD1(u, l, t)
     return False
     # --------------------------------------------------- #
