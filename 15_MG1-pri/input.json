@@ -3,8 +3,8 @@
     "avg_pkt_ia_time": [[40, 40, 40]], 
     "dist_type_pkt_ia_time": ["M"], 
 
-    "avg_pkt_len_bits": [12], 
-    "variance_pkt_len_bits": [12], 
+    "avg_pkt_len_bits": [[12,12,12]], 
+    "variance_pkt_len_bits": [[12,12,12]], 
     "dist_type_pkt_len": [["D", "G_uniform", "M"]], 
 
     "capacity": 1, 
