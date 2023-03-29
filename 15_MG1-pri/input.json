@@ -1,13 +1,13 @@
 {
-    "lambda": [0],
-    "avg_pkt_ia_time": [[40, 40, 40]], 
+    "avg_pkt_ia_time": [[30, 30, 30]], 
     "dist_type_pkt_ia_time": ["M"], 
 
-    "avg_pkt_len_bits": [[12,12,12]], 
-    "variance_pkt_len_bits": [[12,12,12]], 
+    "avg_pkt_len_bits": [[10,5,7]], 
+    "variance_pkt_len_bits": [[0,5,0]], 
+    "sigma_squared": [[0,8.333,49]],
     "dist_type_pkt_len": [["D", "G_uniform", "M"]], 
 
     "capacity": 1, 
-    "num_pkts": [[5000, 5000, 5000]],
-    "num_sources" : [[0,1,2]]
+    "num_pkts": [[10000, 10000, 10000]],
+    "num_sources" : [[1,2,3]]
 }

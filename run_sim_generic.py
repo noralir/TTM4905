@@ -10,7 +10,7 @@ data = True                 # bool
 nth = True                  # bool
 '''
 
-def run_simulator(folder, input_file, runs, data, nth):
+def run_simulator(folder, input_file, runs, data, nth, multiple_classes = False):
     # CHECK FOR FOLDERS
     folder_data = folder + "data/"
     if not os.path.exists(folder_data):
@@ -25,7 +25,7 @@ def run_simulator(folder, input_file, runs, data, nth):
     for i in range(runs):
         filename_data = folder + "data/" + str(i) + ".csv" if data else data
         print("start sim", i, "time:", datetime.now().strftime("%H:%M:%S"))
-        generic_simulator(input_variables = input_variables, filename_data = filename_data, folder_nth = folder_nth)
+        generic_simulator(input_variables = input_variables, filename_data = filename_data, folder_nth = folder_nth, multiple_classes = multiple_classes)
         print("  end sim", i, "time:", datetime.now().strftime("%H:%M:%S"))
 
 

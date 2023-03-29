@@ -17,8 +17,7 @@ sojourn_cdf_MD1 = lambda u, l, t : False #TODO
 
 sojourn_MD1_not_working = lambda u, l, t : [( (1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t] #TODO: not working
 
-def MG1(u, l, S2, t):
-    return False
+
 
 def get_y_theoretical(u, l, t, dist_type, plot_type, S2=0):
     # --- M/M/1 ----------------------------------------- #
@@ -76,30 +75,6 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     # --- THEORETICAL --------------------------------------------------------------------------------------------------------- #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
-
-    '''
-    
-    #HANDLE IF NUM SOURCES#
-    if "num_sources" in input_variables: # If multiple soruces (with priority)
-        num_sources = input_variables["num_sources"]
-        for i in range(len(num_sources)):
-            dist_type_pkt_ia_time_i = input_variables["dist_type_pkt_ia_time"][i]
-            if type(dist_type_pkt_ia_time_i) == type([]):
-                dist_type_pkt_ia_time_i = "G"
-            dist_type_pkt_len_i = input_variables["dist_type_pkt_len"][i]
-            if type(dist_type_pkt_len_i) == type([]):
-                dist_type_pkt_len_i = "G"
-            dist_type = dist_type_pkt_ia_time_i + dist_type_pkt_len_i
-
-            lambda_i = [1/t for t in input_variables["avg_pkt_ia_time"][i]]
-            mu_i = [1/t for t in input_variables["avg_pkt_len_bits"][i]]
-            
-            t = np.arange(0, 150, 1)
-            y = get_y_theoretical(mu_i, lambda_i, t, dist_type, plot_type, S2=input_variables["variance_pkt_len_bits"][i])
-
-    '''
-
-
 
     lambda_list = [1/l for l in input_variables["avg_pkt_ia_time"]] # Get lambdas
     mu_list = [1/((m/input_variables["capacity"])) for m in input_variables["avg_pkt_len_bits"]] # Get mus
@@ -185,12 +160,62 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
     plt.show()
 
 
+
+def MG1(class_i, lambda_,  mu_, sigma_s_2):
+    rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
+    print("!!!!!!!!!!!!!!",[(rho_[j-1]**2 + lambda_[j-1]**2*sigma_s_2[j-1])/(2*lambda_[j-1]) for j in class_i])
+    
+
+    
+    
+    R_bar = sum([(rho_[j-1]**2 + lambda_[j-1]**2*sigma_s_2[j-1])/(2*lambda_[j-1]) for j in class_i]) # one number, part of eq 13
+    W_bar_i = lambda i : R_bar/((1-sum([rho_[j-1] for j in range(1,i)]))*(1-sum([rho_[j-1] for j in range(1, i+1)])))
+    P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i(i))
+
+    t = np.arange(0,30,0.1)
+    for ii in class_i:
+        plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
+
+    print("-------------------------------------------------------------------------------")
+    print("INPUTS")
+    print("  lambda:", lambda_)
+    print("      mu:", mu_)
+    print("sigma_s2:", sigma_s_2)
+    print("     rho:", rho_)
+    print("-------------------------------------------------------------------------------\n")
+    
+    print("-------------------------------------------------------------------------------")
+    print("PARTS FOR CALCULATING R_BAR")
+    for j in class_i:
+        print("i =", j, "rho_i^2 =", rho_[j-1]**2,"lambda_i^2 =", lambda_[j-1]**2, "sigma_s^2 =", sigma_s_2[j-1], "2*lambda_i =",2*lambda_[j-1])
+    print("-------------------------------------------------------------------------------\n")
+    
+    print("-------------------------------------------------------------------------------")
+    print("PARTS FOR CALCULATING W_BAR_I")
+    for ii in class_i:
+        print(R_bar, (1-sum([rho_[j-1] for j in range(1,ii)])),(1-sum([rho_[j-1] for j in range(1, ii+1)])))
+    print("-------------------------------------------------------------------------------\n")
+
+    print("-------------------------------------------------------------------------------")
+    for ii in class_i:
+        print("expected waiting time, class", ii,W_bar_i(ii))
+    print("-------------------------------------------------------------------------------\n")
+
+
+
 def plot_MG1_priority_file(filename_input, filename_data):
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
 
     # THEORETICAL #
-    m = 0
+    for i in range(len(input_variables["num_sources"])):
+
+        class_i = input_variables["num_sources"][i]
+        lambda_ = [1/l for l in input_variables["avg_pkt_ia_time"][i]]
+        mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
+        sigma_s_2 = input_variables["sigma_squared"][i]
+
+        MG1(class_i, lambda_, mu_, sigma_s_2)
     # ----------- #
     # SIMULATION #
     fields_data, rows_data = read_data_csv(filename_data)
@@ -201,25 +226,34 @@ def plot_MG1_priority_file(filename_input, filename_data):
         n = sum(num_pkts_sublist)
         part_of_dataset = rows_data[:n+1] # past of dataset that we are interested in for now
         rows_data = rows_data[n+1:] # Leftover data
-        split = [[] for n in range(len(num_pkts_sublist))]
+        split = [[] for n in range(len(num_pkts_sublist))] # Split data based on 
 
         for row in part_of_dataset:
-            subindex = int(row[0][0])
+            str_number = str(int(row[0]))
+            if len(str_number) == 1:
+                str_number = "00"+str_number
+            elif len(str_number) == 2:
+                str_number = "0" + str_number
+            subindex = int(str_number[-2])
             split[subindex].append(row)
-        for list in split:
 
+        for j in range(len(split)):
+            list = split[j]
+            str_number = str(int(list[20][0]))
+            pri = str_number[-1]
+            print("simulated average wait time of class",j+1, np.average([l[2] for l in list]))
+            print("-------------------------------------AVG PKT SIZE",np.average([l[4] for l in list]))
             plot_x, plot_y = get_x_y_simulation(list, "wait_pdf")
-
-            plt.plot(plot_x, 
-                    plot_y, 
-                    label="test"+str(i), 
-                    ls="--")
+            
+            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+            
         i += 1
     # ---------- #
     # PLOT #
     plt.xlabel("Time")
     plt.ylabel("P(T<=t)")
-    #plt.xlim([0,80]) #TODO: make dependant on whats beeing plotted
+    plt.xlim([0,100]) #TODO: make dependant on whats beeing plotted
+    #plt.yscale("log")
     plt.title("File: " + filename_data +", type: wait_pdf")
     plt.legend()
     plt.show()

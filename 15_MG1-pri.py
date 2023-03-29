@@ -1,5 +1,5 @@
 from run_sim_generic import run_simulator
-from plot_generic import plot_MG1_priority_file
+from plot_generic import plot_MG1_priority_file, MG1
 from print_generic_stats import generic_stats
 
 folder = "15_MG1-pri/"

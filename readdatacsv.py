@@ -6,7 +6,7 @@ def read_data_csv(filename):
               csvreader = csv.reader(file)
               fields = next(csvreader)
               rows = np.array([np.array([
-                     str(row[0]), 
+                     int(row[0]), 
                      float(row[1]), 
                      float(row[2]), 
                      float(row[3]), 

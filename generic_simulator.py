@@ -24,7 +24,7 @@ def packet_size(dist_type_pkt_len, avg_pkt_len_bits, variance_pkt_len_bits):
         return np.random.uniform(avg_pkt_len_bits-variance_pkt_len_bits, avg_pkt_len_bits+variance_pkt_len_bits)
     return avg_pkt_len_bits
 
-def generic_simulator(input_variables, filename_data = False, folder_nth = False):
+def generic_simulator(input_variables, filename_data = False, folder_nth = False, multiple_classes = False):
 
     def packetgenerator(env):
         global check_list
@@ -33,7 +33,7 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
             for k in range(len(input_variables["num_pkts"])): # index k in input-file
                 '''
                 EXAMPLES
-                num_sources_k = [0,1,2]
+                num_sources_k = [1,2,3] # Class/priority
                 num_pkts_k = [100, 100, 100]
                 '''
                 # If there is a list at index k, keep it, if not change to a list with priority getting lower, e.g. 3 turns into [0,1,2]
@@ -57,7 +57,7 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                                        pkt_size_bits = packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][i], 
                                                                    avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i],
                                                                    variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][i]), 
-                                       number = j, 
+                                       number = str(j)+"00", #add trailing 0s to be able to be handeled by mulitple classes 
                                        dist_i = i))
                     j += 1
                 j = 0
@@ -72,7 +72,7 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                                pkt_size_bits=packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][index][subindex] if type(input_variables["dist_type_pkt_len"][index]) == type([]) else input_variables["dist_type_pkt_len"][index], 
                                                          avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][subindex] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index],
                                                          variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index][subindex] if type(input_variables["variance_pkt_len_bits"][index]) == type([]) else input_variables["variance_pkt_len_bits"][index]), 
-                               number=str(subindex)+str(priority)+str(j), 
+                               number=str(j)+str(subindex)+str(priority), 
                                dist_i=index, 
                                priority = priority))
             j += 1
@@ -93,7 +93,8 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
         # Save data 
         if filename_data:
             writer.writerow([number, t_generated, t_buffer, t_processing, pkt_size_bits, n_in_queue])
-        if number in [0, 10, 100, 1000, 10000, 100000, 1000000] and folder_nth:
+        number_int = int(number[:-2])    
+        if number_int in [0, 10, 100, 1000, 10000, 100000, 1000000] and folder_nth:
             folder_path = folder_nth + str(dist_i)
             if not os.path.exists(folder_path):
                 os.makedirs(folder_path)
