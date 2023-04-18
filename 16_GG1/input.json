@@ -1,0 +1,13 @@
+{
+    "avg_pkt_ia_time": [10], 
+    "sigma_squared_pkt_ia_time": [33.333],
+    "dist_type_pkt_ia_time": ["G_uniform"], 
+
+    "avg_pkt_len_bits": [6], 
+    "variance_pkt_len_bits": [6], 
+    "sigma_squared_pkt_len": [12],
+    "dist_type_pkt_len": ["G_uniform"], 
+
+    "capacity": 1, 
+    "num_pkts": [100000]
+}

@@ -5,6 +5,13 @@ import json
 import os
 from readdatacsv import read_data_csv
 
+''' Comments
+# * one
+# ! two
+# ? three
+# TODO four
+'''
+
 wait_pdf_MM1 = lambda u, l, t : False #TODO
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
@@ -17,9 +24,17 @@ sojourn_cdf_MD1 = lambda u, l, t : False #TODO
 
 sojourn_MD1_not_working = lambda u, l, t : [( (1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t] #TODO: not working
 
+def wait_pdf_GG1(u, l, t, sigma_squared_pkt_ia_time, sigma_squared_pkt_len):
+    #! G/G/1 SINGLE CLASS 
+    s_a = sigma_squared_pkt_ia_time # variance ia time
+    s_s = sigma_squared_pkt_len # variance service time
+    r = l/u #rho
+    W_bar = (l * (r**2 + l**2 * s_s) * (s_a + s_s)) / (2 * (1-r) * (1 + l**2 * s_s))
+    P_W_i_greater_than_t = lambda t : r*math.e**(-r*t/W_bar)
+    return P_W_i_greater_than_t(t)
 
-
-def get_y_theoretical(u, l, t, dist_type, plot_type, S2=0):
+def get_y_theoretical(u, l, t, dist_type, plot_type, sigma_squared_pkt_ia_time=0, sigma_squared_pkt_len=0):
+    #! Get theoretical distribution for single class
     # --- M/M/1 ----------------------------------------- #
     if dist_type == "MM" and plot_type == "wait_cdf":
         return wait_cdf_MM1(u, l, t)
@@ -41,13 +56,15 @@ def get_y_theoretical(u, l, t, dist_type, plot_type, S2=0):
         return sojourn_pdf_MD1(u, l, t)
     # --------------------------------------------------- #
     # --- X/G/1 ----------------------------------------- #
-    elif "MG" in dist_type:
-        return MG1(u, l, t)
+    elif dist_type == "MG":
+        return False #TODO
+    elif dist_type == "GG" and plot_type == "wait_pdf":
+        return wait_pdf_GG1(u, l, t, sigma_squared_pkt_ia_time, sigma_squared_pkt_len)
     # --------------------------------------------------- #
-
     return False
 
 def get_x_y_simulation(rows_data, plot_type):
+    #! get x and y lists from silulation
     hist, x_hist = [], []
     if "wait" in plot_type:
         wait = [row[2] for row in rows_data]
@@ -60,29 +77,22 @@ def get_x_y_simulation(rows_data, plot_type):
     elif "pdf" in plot_type:
         return x_hist[:-1], hist
 
-def get_theoretical_list_flattened(list, wanted_type):
-    return_list = []
-    for item in list:
-        if type(item) == wanted_type:
-            return_list.append(item)
-        elif type(item) == type([]):
-            for subitem in item:
-                return_list.append(item) 
-    return return_list
-
-
 def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
+    #! SINGLE CLASS
+    #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
+    #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
     # --- THEORETICAL --------------------------------------------------------------------------------------------------------- #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
-
     lambda_list = [1/l for l in input_variables["avg_pkt_ia_time"]] # Get lambdas
+    sigma_squared_pkt_ia_time_list = input_variables["sigma_squared_pkt_ia_time"] if "sigma_squared_pkt_ia_time" in input_variables else 0
     mu_list = [1/((m/input_variables["capacity"])) for m in input_variables["avg_pkt_len_bits"]] # Get mus
+    sigma_squared_pkt_len_list = input_variables["sigma_squared_pkt_len"] if "sigma_squared_pkt_len" in input_variables else 0
     t = np.arange(0, 150, 1)
     theoretical_plotted=[] # Handle if plots have been done already
     for i in range(len(lambda_list)):
-        dist_type = input_variables["dist_type_pkt_ia_time"][i] + input_variables["dist_type_pkt_len"][i] #e.g. "MM"
-        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
+        dist_type = input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] #e.g. "MM"
+        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type, sigma_squared_pkt_ia_time_list[i],sigma_squared_pkt_len_list[i])
         if dist_type == "MD":
             plt.yscale("log")
         plotted_dist = dist_type+str(lambda_list[i])+str(mu_list[i])
@@ -110,20 +120,23 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     # --- PLOT ---------------------------------------------------------------------------------------------------------------- #
     plt.xlabel("Time")
     plt.ylabel("P(T<=t)")
-    #plt.xlim([0,80]) #TODO: make dependant on whats beeing plotted
+    #plt.xlim([0,80]) #TODO: make dependant on what's beeing plotted
     plt.title("File: " + filename_data +", type: "+plot_type)
     plt.legend()
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
 def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
+    #! plot specific folder
+    #! gives a plot with multiple subplots each showing packet n
+    # SINGLE CLASS #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     t = np.arange(0, 150, 1)
     fig, axs = plt.subplots(2, 3)
     theoretical_plotted = []
     for i in indexes:
-        dist_type = input_variables["dist_type_pkt_ia_time"][i] + input_variables["dist_type_pkt_len"][i] #e.g. "MM"
+        dist_type = input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] #e.g. "MM"
         lambda_ = 1/input_variables["avg_pkt_ia_time"][i]
         mu_ = 1/((input_variables["avg_pkt_len_bits"][i]/input_variables["capacity"]))
         folder_nth_i = folder_nth + str(i) + "/"
@@ -161,13 +174,9 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
 
 
 
-def MG1(class_i, lambda_,  mu_, sigma_s_2):
+def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_s_2):
+    #! gives theoretical plots needed for plot_MG1_priority_file()
     rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
-    print("!!!!!!!!!!!!!!",[(rho_[j-1]**2 + lambda_[j-1]**2*sigma_s_2[j-1])/(2*lambda_[j-1]) for j in class_i])
-    
-
-    
-    
     R_bar = sum([(rho_[j-1]**2 + lambda_[j-1]**2*sigma_s_2[j-1])/(2*lambda_[j-1]) for j in class_i]) # one number, part of eq 13
     W_bar_i = lambda i : R_bar/((1-sum([rho_[j-1] for j in range(1,i)]))*(1-sum([rho_[j-1] for j in range(1, i+1)])))
     P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i(i))
@@ -176,48 +185,20 @@ def MG1(class_i, lambda_,  mu_, sigma_s_2):
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
-    print("-------------------------------------------------------------------------------")
-    print("INPUTS")
-    print("  lambda:", lambda_)
-    print("      mu:", mu_)
-    print("sigma_s2:", sigma_s_2)
-    print("     rho:", rho_)
-    print("-------------------------------------------------------------------------------\n")
-    
-    print("-------------------------------------------------------------------------------")
-    print("PARTS FOR CALCULATING R_BAR")
-    for j in class_i:
-        print("i =", j, "rho_i^2 =", rho_[j-1]**2,"lambda_i^2 =", lambda_[j-1]**2, "sigma_s^2 =", sigma_s_2[j-1], "2*lambda_i =",2*lambda_[j-1])
-    print("-------------------------------------------------------------------------------\n")
-    
-    print("-------------------------------------------------------------------------------")
-    print("PARTS FOR CALCULATING W_BAR_I")
-    for ii in class_i:
-        print(R_bar, (1-sum([rho_[j-1] for j in range(1,ii)])),(1-sum([rho_[j-1] for j in range(1, ii+1)])))
-    print("-------------------------------------------------------------------------------\n")
-
-    print("-------------------------------------------------------------------------------")
-    for ii in class_i:
-        print("expected waiting time, class", ii,W_bar_i(ii))
-    print("-------------------------------------------------------------------------------\n")
-
-
-
 def plot_MG1_priority_file(filename_input, filename_data):
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
 
-    # THEORETICAL #
+    # ----------------------------- THEORETICAL ----------------------------- #
     for i in range(len(input_variables["num_sources"])):
-
         class_i = input_variables["num_sources"][i]
         lambda_ = [1/l for l in input_variables["avg_pkt_ia_time"][i]]
         mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
         sigma_s_2 = input_variables["sigma_squared"][i]
 
-        MG1(class_i, lambda_, mu_, sigma_s_2)
-    # ----------- #
-    # SIMULATION #
+        MG1_priority_theoretical(class_i, lambda_, mu_, sigma_s_2) # Plots all classes
+    # ---------------------------------------------------------------------- #
+    # ----------------------------- SIMULATION ----------------------------- #
     fields_data, rows_data = read_data_csv(filename_data)
     i = 0
     num_pkts = input_variables["num_pkts"]
@@ -244,17 +225,50 @@ def plot_MG1_priority_file(filename_input, filename_data):
             print("simulated average wait time of class",j+1, np.average([l[2] for l in list]))
             print("-------------------------------------AVG PKT SIZE",np.average([l[4] for l in list]))
             plot_x, plot_y = get_x_y_simulation(list, "wait_pdf")
-            
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
-            
         i += 1
-    # ---------- #
-    # PLOT #
+    # ---------------------------------------------------------------- #
+    # ----------------------------- PLOT ----------------------------- #
     plt.xlabel("Time")
     plt.ylabel("P(T<=t)")
     plt.xlim([0,100]) #TODO: make dependant on whats beeing plotted
-    #plt.yscale("log")
     plt.title("File: " + filename_data +", type: wait_pdf")
     plt.legend()
     plt.show()
-    # ---- #
+    # ---------------------------------------------------------------- #
+
+def plot_wait_times(filename_input, filename_data):
+    #! plot all wait times from simulation
+    #! add theoretical upper bound
+
+    fields_data, rows_data = read_data_csv(filename_data)
+    #t = [r[1] for r in rows_data]
+    t = [r[1] for r in rows_data if r[2] > 0]
+    #t_buffer = [r[2] for r in rows_data] # With zeros
+    t_buffer = [r[2] for r in rows_data if r[2] > 0]
+    plt.plot(t, t_buffer, '.')
+
+    with open(filename_input, 'r') as f_input:
+        input_variables = json.load(f_input)
+
+    lambda_list = [1/l for l in input_variables["avg_pkt_ia_time"]]
+    s_a_list = input_variables["sigma_squared_pkt_ia_time"] if "sigma_squared_pkt_ia_time" in input_variables else False
+    mu_list = [1/u for u in input_variables["avg_pkt_len_bits"]]
+    s_s_list = input_variables["sigma_squared_pkt_len"] if "sigma_squared_pkt_len" in input_variables else False
+
+    dist_type_list = [input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] for i in range(len(lambda_list))]
+
+    for i in range(len(lambda_list)):
+        W_upper_bound = False
+        if dist_type_list[i] == "GG":
+            l = lambda_list[i]
+            s_a = s_a_list[i]
+            s_s = s_s_list[i]
+            r = lambda_list[i]/mu_list[i]
+            W_upper_bound = (l * (s_a+s_s)) / (2 * (1-r))
+            print(W_upper_bound)
+        elif dist_type_list[i] == "MM":
+            W_upper_bound = False
+        if W_upper_bound:
+            plt.plot(t, [W_upper_bound] * len(t))
+    plt.show()
