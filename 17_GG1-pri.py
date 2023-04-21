@@ -2,7 +2,7 @@ from run_sim_generic import run_simulator
 from plot_generic import plot_priority_file, MG1_priority_theoretical
 from print_generic_stats import generic_stats
 
-folder = "15_MG1-pri/"
+folder = "17_GG1-pri/"
 
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 

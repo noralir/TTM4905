@@ -6,7 +6,7 @@ import os
 
 check_list = []
 
-def inter_arrival_time(dist_type_pkt_ia_time, avg_pkt_ia_time, variance_pkt_len_bits = 0):
+def inter_arrival_time(dist_type_pkt_ia_time, avg_pkt_ia_time):
     if dist_type_pkt_ia_time == 'M':
         return np.random.exponential(avg_pkt_ia_time)
     elif dist_type_pkt_ia_time == 'D':
@@ -15,7 +15,7 @@ def inter_arrival_time(dist_type_pkt_ia_time, avg_pkt_ia_time, variance_pkt_len_
         return np.random.uniform(0, avg_pkt_ia_time*2)
     return avg_pkt_ia_time # D is standard
 
-def packet_size(dist_type_pkt_len, avg_pkt_len_bits, variance_pkt_len_bits):
+def packet_size(dist_type_pkt_len, avg_pkt_len_bits):
     if dist_type_pkt_len == 'M':
         return np.random.exponential(avg_pkt_len_bits)
     elif dist_type_pkt_len == 'D':
@@ -51,12 +51,10 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                 j = 0 
                 while j <= input_variables["num_pkts"][i]:
                     yield env.timeout(inter_arrival_time(dist_type_pkt_ia_time = input_variables["dist_type_pkt_ia_time"][i], 
-                                                         avg_pkt_ia_time = input_variables["avg_pkt_ia_time"][i], 
-                                                         variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][i]))
+                                                         avg_pkt_ia_time = input_variables["avg_pkt_ia_time"][i]))
                     env.process(packet(env = env, 
                                        pkt_size_bits = packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][i], 
-                                                                   avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i],
-                                                                   variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][i]), 
+                                                                   avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i]), 
                                        number = str(j)+"00", #add trailing 0s to be able to be handeled by mulitple classes 
                                        dist_i = i))
                     j += 1
@@ -66,12 +64,10 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
         j = 0
         while j <= num_pkts:
             yield env.timeout(inter_arrival_time(dist_type_pkt_ia_time=input_variables["dist_type_pkt_ia_time"][index] if type(input_variables["dist_type_pkt_ia_time"][index]) == type("M") else input_variables["dist_type_pkt_ia_time"][index][subindex], 
-                                                 avg_pkt_ia_time=input_variables["avg_pkt_ia_time"][index] if type(input_variables["avg_pkt_ia_time"][index]) == type(1) else input_variables["avg_pkt_ia_time"][index][subindex], 
-                                                 variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index] if type(input_variables["variance_pkt_len_bits"][index]) == type(1) else input_variables["variance_pkt_len_bits"][index][subindex]))
+                                                 avg_pkt_ia_time=input_variables["avg_pkt_ia_time"][index] if type(input_variables["avg_pkt_ia_time"][index]) == type(1) else input_variables["avg_pkt_ia_time"][index][subindex]))
             env.process(packet(env=env, 
                                pkt_size_bits=packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][index][subindex] if type(input_variables["dist_type_pkt_len"][index]) == type([]) else input_variables["dist_type_pkt_len"][index], 
-                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][subindex] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index],
-                                                         variance_pkt_len_bits = input_variables["variance_pkt_len_bits"][index][subindex] if type(input_variables["variance_pkt_len_bits"][index]) == type([]) else input_variables["variance_pkt_len_bits"][index]), 
+                                                         avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][index][subindex] if type(input_variables["avg_pkt_len_bits"][index]) == type([]) else input_variables["avg_pkt_len_bits"][index]), 
                                number=str(j)+str(subindex)+str(priority), 
                                dist_i=index, 
                                priority = priority))

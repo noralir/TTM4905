@@ -181,11 +181,11 @@ def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_s_2):
     W_bar_i = lambda i : R_bar/((1-sum([rho_[j-1] for j in range(1,i)]))*(1-sum([rho_[j-1] for j in range(1, i+1)])))
     P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i(i))
 
-    t = np.arange(0,30,0.1)
+    t = np.arange(0,100,1)
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
-def plot_MG1_priority_file(filename_input, filename_data):
+def plot_priority_file(filename_input, filename_data):
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
 
@@ -194,9 +194,12 @@ def plot_MG1_priority_file(filename_input, filename_data):
         class_i = input_variables["num_sources"][i]
         lambda_ = [1/l for l in input_variables["avg_pkt_ia_time"][i]]
         mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
-        sigma_s_2 = input_variables["sigma_squared"][i]
+        sigma_s_2 = input_variables["sigma_squared_pkt_len"][i]
+        #! if MG1 do someting, if GG1 do something else
+        #TODO !!!
 
         MG1_priority_theoretical(class_i, lambda_, mu_, sigma_s_2) # Plots all classes
+
     # ---------------------------------------------------------------------- #
     # ----------------------------- SIMULATION ----------------------------- #
     fields_data, rows_data = read_data_csv(filename_data)
@@ -258,6 +261,8 @@ def plot_wait_times(filename_input, filename_data):
 
     dist_type_list = [input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] for i in range(len(lambda_list))]
 
+    '''
+    #! the upper bound is for the averege wait time, not individual wait times
     for i in range(len(lambda_list)):
         W_upper_bound = False
         if dist_type_list[i] == "GG":
@@ -271,4 +276,5 @@ def plot_wait_times(filename_input, filename_data):
             W_upper_bound = False
         if W_upper_bound:
             plt.plot(t, [W_upper_bound] * len(t))
+    '''
     plt.show()

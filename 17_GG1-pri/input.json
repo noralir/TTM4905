@@ -1,0 +1,13 @@
+{
+    "avg_pkt_ia_time": [[30, 30, 30]], 
+    "sigma_squared_pkt_ia_time":[[300,900,900]],
+    "dist_type_pkt_ia_time": [["D", "M", "M"]], 
+
+    "avg_pkt_len_bits": [[10,5,7]], 
+    "sigma_squared_pkt_len": [[8.333,25,49]],
+    "dist_type_pkt_len": [["D", "M", "M"]], 
+
+    "capacity": 1, 
+    "num_pkts": [[10000, 10000, 10000]],
+    "num_sources" : [[1,2,3]]
+}
