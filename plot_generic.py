@@ -174,10 +174,10 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
 
 
 
-def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_s_2):
+def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
     #! gives theoretical plots needed for plot_MG1_priority_file()
     rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
-    R_bar = sum([(rho_[j-1]**2 + lambda_[j-1]**2*sigma_s_2[j-1])/(2*lambda_[j-1]) for j in class_i]) # one number, part of eq 13
+    R_bar = sum([(rho_[j-1]**2 + lambda_[j-1]**2*sigma_squared_pkt_len[j-1])/(2*lambda_[j-1]) for j in class_i]) # one number, part of eq 13
     W_bar_i = lambda i : R_bar/((1-sum([rho_[j-1] for j in range(1,i)]))*(1-sum([rho_[j-1] for j in range(1, i+1)])))
     P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i(i))
 
@@ -185,24 +185,20 @@ def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_s_2):
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
+def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i):
+    rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
+    P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i[i-1])
+    t = np.arange(0,100,1)
+    for ii in class_i:
+        plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
+
+
 def plot_priority_file(filename_input, filename_data):
+    fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
-
-    # ----------------------------- THEORETICAL ----------------------------- #
-    for i in range(len(input_variables["num_sources"])):
-        class_i = input_variables["num_sources"][i]
-        lambda_ = [1/l for l in input_variables["avg_pkt_ia_time"][i]]
-        mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
-        sigma_s_2 = input_variables["sigma_squared_pkt_len"][i]
-        #! if MG1 do someting, if GG1 do something else
-        #TODO !!!
-
-        MG1_priority_theoretical(class_i, lambda_, mu_, sigma_s_2) # Plots all classes
-
-    # ---------------------------------------------------------------------- #
     # ----------------------------- SIMULATION ----------------------------- #
-    fields_data, rows_data = read_data_csv(filename_data)
+    
     i = 0
     num_pkts = input_variables["num_pkts"]
     for num_pkts_sublist in num_pkts:
@@ -225,12 +221,31 @@ def plot_priority_file(filename_input, filename_data):
             list = split[j]
             str_number = str(int(list[20][0]))
             pri = str_number[-1]
-            print("simulated average wait time of class",j+1, np.average([l[2] for l in list]))
-            print("-------------------------------------AVG PKT SIZE",np.average([l[4] for l in list]))
+            #print("simulated average wait time of class",j+1, np.average([l[2] for l in list]))
+            #print("-------------------------------------AVG PKT SIZE",np.average([l[4] for l in list]))
             plot_x, plot_y = get_x_y_simulation(list, "wait_pdf")
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
         i += 1
     # ---------------------------------------------------------------- #
+
+    # ----------------------------- THEORETICAL ----------------------------- #
+    for i in range(len(input_variables["num_sources"])):
+        class_i = input_variables["num_sources"][i]
+        lambda_ = [1/l for l in input_variables["avg_pkt_ia_time"][i]]
+        sigma_squared_pkt_ia_time = input_variables["sigma_squared_pkt_ia_time"] if "sigma_squared_pkt_ia_time" in input_variables else False
+
+        mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
+        sigma_squared_pkt_len = input_variables["sigma_squared_pkt_len"][i]
+
+        dist_type_pkt_ia_time = input_variables["dist_type_pkt_ia_time"]
+        if type(dist_type_pkt_ia_time) == type("M"):
+            if dist_type_pkt_ia_time == "M":
+                MG1_priority_theoretical(class_i, lambda_, mu_, sigma_squared_pkt_len) # Plots all classes
+        elif type(dist_type_pkt_ia_time) == type([]):
+            W_bar_i = [np.average([item[2] for item in l]) for l in split] # Gather W_bar_i
+            GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i)
+
+    # ---------------------------------------------------------------------- #
     # ----------------------------- PLOT ----------------------------- #
     plt.xlabel("Time")
     plt.ylabel("P(T<=t)")
