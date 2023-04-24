@@ -299,29 +299,39 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     
-    test1 = [np.average(a)/len(a) for a in input_variables["avg_pkt_ia_time"]]
-    #lambda_list = [1/sum(a) for a in input_variables["avg_pkt_ia_time"]]
-    lambda_list = [1/t for t in test1]
 
-    test2 = [np.average(b)/len(b) for b in input_variables["avg_pkt_len_bits"]]
-    #mu_list = [1/sum(a) for a in input_variables["avg_pkt_len_bits"]]
-    mu_list = [1/t for t in test2]
-    #print(lambda_list)
+    #? How to find combined lambda for all sources?
+    #* Find avg ia time for all sources and divide by number of sources to find avg is time of packets for system. Lambda is the inverse of this.
+    #* EXAMPLE: Two sources with each having avg ia time of 15, avg of these two is 15.
+    #*          Since there is two sources we divide by 2 to get avg is time for pkt in system, giving 7.5. 
+    #*          Lambda is the inverse: 1/7.5
+    lambda_list_temp = [np.average(a)/len(a) for a in input_variables["avg_pkt_ia_time"]]
+    lambda_list = [1/t for t in lambda_list_temp]
+
+    #? How to find mu for all sources?
+    #* The expected service time for the system is the average of expected service time for each class. Mu is the inverse.
+    mu_list_temp = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
+    mu_list = [1/t for t in mu_list_temp]
     
     t = np.arange(0, 300, 1)
     dist_type = "MM"
     for i in range(len(lambda_list)):
         y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
-        plt.plot(t,y,label="theoretical")
+        if type(y) == type(np.array([])):
+            plt.plot(t,y,label="theoretical")
                       
     #SIM
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
+
+    #avg ia time
+    test3 = [rows_data[i][1]-rows_data[i-1][1] for i in range(1,len(rows_data))]
+    #print(np.average(test3))
+
     for n in num_pkts:
         test = rows_data[:n+1]
         rows_data = rows_data[n+1:]
         plot_x, plot_y = get_x_y_simulation(test, plot_type)
         plt.plot(plot_x, plot_y, label="meh", ls="--")
 
-    #plt.xlim([0,200])
     plt.show()
