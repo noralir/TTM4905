@@ -293,3 +293,35 @@ def plot_wait_times(filename_input, filename_data):
             plt.plot(t, [W_upper_bound] * len(t))
     '''
     plt.show()
+
+
+def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf"):
+    with open(filename_input, 'r') as f_input:
+        input_variables = json.load(f_input)
+    
+    test1 = [np.average(a)/len(a) for a in input_variables["avg_pkt_ia_time"]]
+    #lambda_list = [1/sum(a) for a in input_variables["avg_pkt_ia_time"]]
+    lambda_list = [1/t for t in test1]
+
+    test2 = [np.average(b)/len(b) for b in input_variables["avg_pkt_len_bits"]]
+    #mu_list = [1/sum(a) for a in input_variables["avg_pkt_len_bits"]]
+    mu_list = [1/t for t in test2]
+    #print(lambda_list)
+    
+    t = np.arange(0, 300, 1)
+    dist_type = "MM"
+    for i in range(len(lambda_list)):
+        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
+        plt.plot(t,y,label="theoretical")
+                      
+    #SIM
+    num_pkts = [sum(n) for n in input_variables["num_pkts"]]
+    fields_data, rows_data = read_data_csv(filename_data)
+    for n in num_pkts:
+        test = rows_data[:n+1]
+        rows_data = rows_data[n+1:]
+        plot_x, plot_y = get_x_y_simulation(test, plot_type)
+        plt.plot(plot_x, plot_y, label="meh", ls="--")
+
+    #plt.xlim([0,200])
+    plt.show()
