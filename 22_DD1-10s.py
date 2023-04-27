@@ -25,7 +25,7 @@ input_variables = {
     "dist_type_pkt_len": [["D"]*n], 
 
     "capacity": 1, 
-    "num_pkts": [[10000]*n],
+    "num_pkts": [[100000]*n],
     "num_sources" : [[1]*n]
 }                                                                                                                               
 
@@ -33,7 +33,8 @@ input_variables = {
 if not os.path.exists(folder):
     os.makedirs(folder)
 
-write_input_file(input_variables, folder+"input.json")
-run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+#write_input_file(input_variables, folder+"input.json")
+#run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf")
 plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf")
 #generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")

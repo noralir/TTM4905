@@ -4,15 +4,15 @@ from plot_generic import *
 from print_generic_stats import generic_stats
 from create_list_with_given_average import create_list_with_given_average
 
-n = 100
-folder = "23_DD1-100s/"
+n = 1000
+folder = "24_DD1-1000s/"
 
 
 
-avg_pkt_ia_time = create_list_with_given_average(n=n, avg=15)
+avg_pkt_ia_time = create_list_with_given_average(n=n, avg=20)
 
 
-avg_pkt_len_bits = [[x/10 for x in list(range(80,180))]]
+avg_pkt_len_bits = [[x/10 for x in list(range(80,180))]*10]
 
 
 input_variables = {
