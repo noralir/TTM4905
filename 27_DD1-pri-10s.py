@@ -5,21 +5,16 @@ from print_generic_stats import generic_stats
 from create_list_with_given_average import create_list_with_given_average
 
 n = 10
-folder = "25_DM1-pri-10s/"
-
-
+folder = "27_DD1-pri-10s/"
 
 avg_pkt_ia_time1 = create_list_with_given_average(n=n, avg=120,type="lambda")
 avg_pkt_ia_time2 = create_list_with_given_average(n=n, avg=180,type="lambda")
 avg_pkt_ia_time3 = create_list_with_given_average(n=n, avg=150,type="lambda")
-
 type_pkt_ia = "D"
 
 
 avg_pkt_len_bits = create_list_with_given_average(n=n, avg=17.5,type="mu")
-
-
-type_pkt_len = "M"
+type_pkt_len = "D"
 
 
 input_variables = {

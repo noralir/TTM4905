@@ -172,8 +172,6 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
     plt.suptitle(plot_type+" time for "+folder_nth)
     plt.show()
 
-
-
 def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
     #! gives theoretical plots needed for plot_MG1_priority_file()
     rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
@@ -191,7 +189,6 @@ def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, s
     t = np.arange(0,100,1)
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
-
 
 def plot_priority_file(filename_input, filename_data):
     fields_data, rows_data = read_data_csv(filename_data)
@@ -294,7 +291,6 @@ def plot_wait_times(filename_input, filename_data):
     '''
     plt.show()
 
-
 def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf"):
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -334,4 +330,60 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
         plot_x, plot_y = get_x_y_simulation(test, plot_type)
         plt.plot(plot_x, plot_y, label="meh", ls="--")
 
+    plt.show()
+
+def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf"):
+    with open(filename_input, 'r') as f_input:
+        input_variables = json.load(f_input)
+    num_pkts = input_variables["num_pkts"]
+    num_sources = input_variables["num_sources"]
+    priority_classes = [list(set(sublist)) for sublist in num_sources] # e.g. [1,2,3]
+    #SIM--------------------------------------------------------------------------
+    fields_data, rows_data = read_data_csv(filename_data)
+    big_split = []
+    i = 0
+    for num_pkts_sublist in num_pkts:
+        # n is list
+        n = sum(num_pkts_sublist)
+        part_of_dataset = rows_data[:n+1] # past of dataset that we are interested in for now
+        rows_data = rows_data[n+1:] # Leftover data
+        split = [[] for n in range(len(priority_classes[i]))]
+        for row in part_of_dataset:
+            str_number = str(int(row[0]))
+            subindex = int(str_number[-1])
+            split[subindex-1].append(row)
+        for j in range(len(split)):
+            list_test = split[j]
+            str_number = str(int(list_test[20][0]))
+            pri = str_number[-1]
+            plot_x, plot_y = get_x_y_simulation(list_test, "wait_pdf")
+            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+        i += 1
+        big_split.append(split)
+    #-----------------------------------------------------------------------
+
+    #THEORETICAL----------------------------------------------------------------
+    lambda_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
+    mu_list = [[1/m for m in sublist] for sublist in input_variables["avg_pkt_len_bits"]]
+
+    split_lambda_list = [[[] for s in sub] for sub in  priority_classes]
+    split_mu_list = [[[] for s in sub] for sub in  priority_classes]
+
+    for i in range(len(lambda_list)):
+        for j in range(len(lambda_list[i])):
+            split_lambda_list[i][num_sources[i][j]-1].append(lambda_list[i][j])
+            split_mu_list[i][num_sources[i][j]-1].append(mu_list[i][j])
+
+    lambda_i = [[np.average(l)/len(l) for l in sublist] for sublist in split_lambda_list]
+    mu_i = [[np.average(u) for u in sublist] for sublist in split_lambda_list]
+
+    for i in range(len(num_pkts)):
+
+        W_bar_i = [np.average([item[2] for item in l]) for l in big_split[i]] # Gather W_bar_i
+        GG1_priority_theoretical(priority_classes[i], lambda_i[i], 0, mu_i[i], 0, W_bar_i)
+
+
+    #---------------------------------------------------------------------------------------
+
+    plt.legend()
     plt.show()

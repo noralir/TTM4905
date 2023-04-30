@@ -20,9 +20,9 @@ def create_list_with_given_average(n,avg,type="lambda"):
         if n == 10:
             avg_pkt_ia_time = list1
         elif n == 100:
-            avg_pkt_ia_time = [list1*10]
+            avg_pkt_ia_time = list1*10
         elif n == 1000:
-            avg_pkt_ia_time = [list1*100]
+            avg_pkt_ia_time = list1*100
         else:
             return False
     
