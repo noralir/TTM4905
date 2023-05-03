@@ -2,7 +2,7 @@ def create_list_with_given_average(n,avg,type="lambda"):
 
     if type=="lambda":
         average = n * avg
-        increment_number = int(average/(n/2)/2)
+        increment_number = avg
         n1 = int(average-increment_number/2)
         n2 = int(average+increment_number/2)
         avg_pkt_ia_time = [n1, n2]
