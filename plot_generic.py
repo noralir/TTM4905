@@ -191,6 +191,12 @@ def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, s
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
 def plot_priority_file(filename_input, filename_data):
+    cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
+    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl5)
+
+    ax = plt.axes()
+    ax.set_facecolor("#faf4e6")
+
     fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -333,6 +339,17 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     plt.show()
 
 def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf"):
+
+    cl3 = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f']
+    cl4 = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33'] #! Good
+    cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
+    cl6 = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f']
+    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl5)
+
+    ax = plt.axes()
+    ax.set_facecolor("#fffcf5")
+
+
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     num_pkts = input_variables["num_pkts"]
@@ -385,5 +402,9 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
 
     #---------------------------------------------------------------------------------------
 
-    plt.legend()
+
+
+    #plt.legend()
+    plt.legend(frameon=False)
+    #plt.imshow()
     plt.show()
