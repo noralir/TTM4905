@@ -12,6 +12,16 @@ from readdatacsv import read_data_csv
 # TODO four
 '''
 
+def add_colors_to_plot():
+    cl3 = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f']
+    cl4 = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#f781bf','#a65628'] #! Good
+    cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
+    cl6 = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f']
+    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl4)
+
+    ax = plt.axes()
+    ax.set_facecolor("#fffcf5")
+
 wait_pdf_MM1 = lambda u, l, t : False #TODO
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
@@ -81,6 +91,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     #! SINGLE CLASS
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
+    add_colors_to_plot()
     # --- THEORETICAL --------------------------------------------------------------------------------------------------------- #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -129,6 +140,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
 def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
     #! plot specific folder
     #! gives a plot with multiple subplots each showing packet n
+    #add_colors_to_plot()
     # SINGLE CLASS #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -191,11 +203,8 @@ def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, s
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
 def plot_priority_file(filename_input, filename_data):
-    cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
-    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl5)
 
-    ax = plt.axes()
-    ax.set_facecolor("#faf4e6")
+    add_colors_to_plot()
 
     fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
@@ -262,6 +271,8 @@ def plot_wait_times(filename_input, filename_data):
     #! plot all wait times from simulation
     #! add theoretical upper bound
 
+    add_colors_to_plot()
+
     fields_data, rows_data = read_data_csv(filename_data)
     #t = [r[1] for r in rows_data]
     t = [r[1] for r in rows_data if r[2] > 0]
@@ -298,23 +309,18 @@ def plot_wait_times(filename_input, filename_data):
     plt.show()
 
 def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf"):
+    add_colors_to_plot()
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
-    
 
-    #? How to find combined lambda for all sources?
-    #* Find avg ia time for all sources and divide by number of sources to find avg is time of packets for system. Lambda is the inverse of this.
-    #* EXAMPLE: Two sources with each having avg ia time of 15, avg of these two is 15.
-    #*          Since there is two sources we divide by 2 to get avg is time for pkt in system, giving 7.5. 
-    #*          Lambda is the inverse: 1/7.5
-    lambda_list_temp = [np.average(a)/len(a) for a in input_variables["avg_pkt_ia_time"]]
-    lambda_list = [1/t for t in lambda_list_temp]
+    all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
+    lambda_list = [sum(sublist) for sublist in all_lambdas_list]
 
     #? How to find mu for all sources?
     #* The expected service time for the system is the average of expected service time for each class. Mu is the inverse.
-    mu_list_temp = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
-    mu_list = [1/t for t in mu_list_temp]
-    
+    avg_avg_pkt_len_bits_list = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
+    mu_list = [1/t for t in avg_avg_pkt_len_bits_list]
+
     t = np.arange(0, 300, 1)
     dist_type = "MM"
     for i in range(len(lambda_list)):
@@ -326,29 +332,32 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
 
-    #avg ia time
-    test3 = [rows_data[i][1]-rows_data[i-1][1] for i in range(1,len(rows_data))]
-    #print(np.average(test3))
+    for i in range(len(all_lambdas_list)):
+        highest_lambda = max(all_lambdas_list[i])
+        index_of_highest_lambda = all_lambdas_list[i].index(highest_lambda)
+        packets_highest = input_variables["num_pkts"][i][index_of_highest_lambda]
+        priority_level_highest = input_variables["num_sources"][i][index_of_highest_lambda]
+        packet_number_start = int(str(packets_highest)+str(index_of_highest_lambda)+str(priority_level_highest))
 
-    for n in num_pkts:
-        test = rows_data[:n+1]
-        rows_data = rows_data[n+1:]
-        plot_x, plot_y = get_x_y_simulation(test, plot_type)
-        plt.plot(plot_x, plot_y, label="meh", ls="--")
+        lowest_lambda = min(all_lambdas_list[i])
+        index_of_lowest_lambda = all_lambdas_list[i].index(lowest_lambda)
+        packets_lowest = input_variables["num_pkts"][i][index_of_lowest_lambda]
+        priority_level_lowest = input_variables["num_sources"][i][index_of_lowest_lambda]
+        packet_number_stop = int(str(packets_lowest)+str(index_of_lowest_lambda)+str(priority_level_lowest))
 
+        row_start = np.where(rows_data[:,0] == packet_number_start)[0][0]
+        row_stop = np.where(rows_data[:,0] == packet_number_stop)[0][0]
+
+        plot_x, plot_y = get_x_y_simulation(rows_data[:row_start], plot_type)
+        plt.plot(plot_x, plot_y, label="sim", ls="--")
+        rows_data = rows_data[row_stop+1:]
+
+    plt.legend()
     plt.show()
 
 def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf"):
 
-    cl3 = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f']
-    cl4 = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33'] #! Good
-    cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
-    cl6 = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f']
-    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl5)
-
-    ax = plt.axes()
-    ax.set_facecolor("#fffcf5")
-
+    add_colors_to_plot()
 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -357,7 +366,51 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
     priority_classes = [list(set(sublist)) for sublist in num_sources] # e.g. [1,2,3]
     #SIM--------------------------------------------------------------------------
     fields_data, rows_data = read_data_csv(filename_data)
+
+    all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
+    #lambda_list = [sum(sublist) for sublist in all_lambdas_list]
+
+
+    all_avg_pkt_len_bits = input_variables["avg_pkt_len_bits"]
+    avg_avg_pkt_len_bits_list = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
+    #mu_list = [1/t for t in avg_avg_pkt_len_bits_list]
+
     big_split = []
+    for i in range(len(all_lambdas_list)):
+        highest_lambda = max(all_lambdas_list[i])
+        index_of_highest_lambda = all_lambdas_list[i].index(highest_lambda)
+        packets_highest = input_variables["num_pkts"][i][index_of_highest_lambda]
+        priority_level_highest = input_variables["num_sources"][i][index_of_highest_lambda]
+        packet_number_start = int(str(packets_highest)+str(index_of_highest_lambda)+str(priority_level_highest))
+
+        lowest_lambda = min(all_lambdas_list[i])
+        index_of_lowest_lambda = all_lambdas_list[i].index(lowest_lambda)
+        packets_lowest = input_variables["num_pkts"][i][index_of_lowest_lambda]
+        priority_level_lowest = input_variables["num_sources"][i][index_of_lowest_lambda]
+        packet_number_stop = int(str(packets_lowest)+str(index_of_lowest_lambda)+str(priority_level_lowest))
+
+        row_start = np.where(rows_data[:,0] == packet_number_start)[0][0]
+        row_stop = np.where(rows_data[:,0] == packet_number_stop)[0][0]
+
+        part_of_dataset = rows_data[:row_start]
+        rows_data = rows_data[row_stop+1:]
+
+        split = [[] for n in range(len(priority_classes[i]))]
+        for row in part_of_dataset:
+            str_number = str(int(row[0]))
+            subindex = int(str_number[-1])
+            split[subindex-1].append(row)
+        for j in range(len(split)):
+            list_test = split[j]
+            str_number = str(int(list_test[20][0]))
+            pri = str_number[-1]
+            plot_x, plot_y = get_x_y_simulation(list_test, "wait_pdf")
+            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+        big_split.append(split)
+
+
+
+    '''
     i = 0
     for num_pkts_sublist in num_pkts:
         # n is list
@@ -376,23 +429,26 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             plot_x, plot_y = get_x_y_simulation(list_test, "wait_pdf")
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
         i += 1
-        big_split.append(split)
+        
+    '''
     #-----------------------------------------------------------------------
 
     #THEORETICAL----------------------------------------------------------------
+    '''
     lambda_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
     mu_list = [[1/m for m in sublist] for sublist in input_variables["avg_pkt_len_bits"]]
 
+    '''
     split_lambda_list = [[[] for s in sub] for sub in  priority_classes]
     split_mu_list = [[[] for s in sub] for sub in  priority_classes]
 
-    for i in range(len(lambda_list)):
-        for j in range(len(lambda_list[i])):
-            split_lambda_list[i][num_sources[i][j]-1].append(lambda_list[i][j])
-            split_mu_list[i][num_sources[i][j]-1].append(mu_list[i][j])
+    for i in range(len(all_lambdas_list)):
+        for j in range(len(all_lambdas_list[i])):
+            split_lambda_list[i][num_sources[i][j]-1].append(all_lambdas_list[i][j])
+            split_mu_list[i][num_sources[i][j]-1].append(all_avg_pkt_len_bits[i][j])
 
-    lambda_i = [[np.average(l)/len(l) for l in sublist] for sublist in split_lambda_list]
-    mu_i = [[np.average(u) for u in sublist] for sublist in split_lambda_list]
+    lambda_i = [[sum(l) for l in sublist] for sublist in split_lambda_list]
+    mu_i = [[1/np.average(u) for u in sublist] for sublist in split_mu_list]
 
     for i in range(len(num_pkts)):
 
@@ -402,9 +458,6 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
 
     #---------------------------------------------------------------------------------------
 
-
-
     #plt.legend()
     plt.legend(frameon=False)
-    #plt.imshow()
     plt.show()
