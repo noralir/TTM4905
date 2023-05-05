@@ -1,13 +1,1 @@
-{
-    "avg_pkt_ia_time": [[30, 30, 30]], 
-    "dist_type_pkt_ia_time": ["M"], 
-
-    "avg_pkt_len_bits": [[10,5,7]], 
-    "variance_pkt_len_bits": [[0,5,0]], 
-    "sigma_squared": [[0,8.333,49]],
-    "dist_type_pkt_len": [["D", "G_uniform", "M"]], 
-
-    "capacity": 1, 
-    "num_pkts": [[10000, 10000, 10000]],
-    "num_sources" : [[1,2,3]]
-}
+{"avg_pkt_ia_time": [[23, 23, 23]], "dist_type_pkt_ia_time": [["M", "M", "M"]], "avg_pkt_len_bits": [[10, 5, 7]], "variance_pkt_len_bits": [[0, 5, 0]], "sigma_squared_pkt_len": [[0, 8.333, 49]], "dist_type_pkt_len": [["D", "G_uniform", "M"]], "capacity": 1, "num_pkts": [[1000000, 1000000, 1000000]], "num_sources": [[1, 2, 3]]}

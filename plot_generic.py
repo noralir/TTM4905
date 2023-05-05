@@ -92,13 +92,28 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
     add_colors_to_plot()
-    # --- THEORETICAL --------------------------------------------------------------------------------------------------------- #
+    # GATHER VARIABLES AND DATA 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
+    fields_data, rows_data = read_data_csv(filename_data)
     lambda_list = [1/l for l in input_variables["avg_pkt_ia_time"]] # Get lambdas
     sigma_squared_pkt_ia_time_list = input_variables["sigma_squared_pkt_ia_time"] if "sigma_squared_pkt_ia_time" in input_variables else 0
     mu_list = [1/((m/input_variables["capacity"])) for m in input_variables["avg_pkt_len_bits"]] # Get mus
     sigma_squared_pkt_len_list = input_variables["sigma_squared_pkt_len"] if "sigma_squared_pkt_len" in input_variables else 0
+    num_pkts = input_variables["num_pkts"]
+    # ------------------------------------------------------------------------------------------------------------------------- #
+    # --- SIMULATION ---------------------------------------------------------------------------------------------------------- #
+    i = 0
+    for n in num_pkts:
+        test = rows_data[:n+1]
+        rows_data = rows_data[n+1:]
+        plot_x, plot_y = get_x_y_simulation(test, plot_type)
+        plt.plot(plot_x, plot_y, 
+                 Label="run: " + str(i) +", lambda="+str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3)), 
+                 ls="--")
+        i += 1
+    # ------------------------------------------------------------------------------------------------------------------------- #
+    # --- THEORETICAL --------------------------------------------------------------------------------------------------------- #
     t = np.arange(0, 150, 1)
     theoretical_plotted=[] # Handle if plots have been done already
     for i in range(len(lambda_list)):
@@ -114,23 +129,9 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
                         y, 
                         label="theoretical,  l = " + str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3))) 
     # ------------------------------------------------------------------------------------------------------------------------- #
-    # --- SIMULATION ---------------------------------------------------------------------------------------------------------- #
-    num_pkts = input_variables["num_pkts"]
-    fields_data, rows_data = read_data_csv(filename_data)
-    i = 0
-    for n in num_pkts:
-        test = rows_data[:n+1]
-        rows_data = rows_data[n+1:]
-        plot_x, plot_y = get_x_y_simulation(test, plot_type)
-        plt.plot(plot_x, 
-                 plot_y, 
-                 label="run: " + str(i) +", lambda="+str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3)), 
-                 ls="--")
-        i += 1
-    # ------------------------------------------------------------------------------------------------------------------------- #
     # --- PLOT ---------------------------------------------------------------------------------------------------------------- #
     plt.xlabel("Time")
-    plt.ylabel("P(T<=t)")
+    plt.ylabel("TODO") #TODO: make dependen on pdf/cfd wait/sojourn
     #plt.xlim([0,80]) #TODO: make dependant on what's beeing plotted
     plt.title("File: " + filename_data +", type: "+plot_type)
     plt.legend()
@@ -140,7 +141,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
 def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
     #! plot specific folder
     #! gives a plot with multiple subplots each showing packet n
-    #add_colors_to_plot()
+    #add_colors_to_plot() # TODO: Check if works
     # SINGLE CLASS #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -157,6 +158,13 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
         files.sort()
         for file in files:
             ax_x, ax_y = math.floor(j/3) ,j%3
+            # --- SIMULATED ------------------------------------------------------------------------------------------------- #
+            fields_data, rows_data = read_data_csv(folder_nth_i + file)
+            plot_x, plot_y = get_x_y_simulation(rows_data, plot_type)
+            axs[ax_x, ax_y].plot(plot_x, 
+                                 plot_y, 
+                                 label=str(i)+"/"+file+", lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)), ls="--")
+            # --------------------------------------------------------------------------------------------------------------- #
             # --- THEORETICAL ----------------------------------------------------------------------------------------------- #
             theoretical_plot = dist_type+str(lambda_)+"_"+file
             if theoretical_plot not in theoretical_plotted:
@@ -172,13 +180,6 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
                 axs[ax_x, ax_y].set_xlabel("t")
                 theoretical_plotted.append(theoretical_plot)
             # --------------------------------------------------------------------------------------------------------------- #
-            # --- SIMULATED ------------------------------------------------------------------------------------------------- #
-            fields_data, rows_data = read_data_csv(folder_nth_i + file)
-            plot_x, plot_y = get_x_y_simulation(rows_data, plot_type)
-            axs[ax_x, ax_y].plot(plot_x, 
-                                 plot_y, 
-                                 label=str(i)+"/"+file+", lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)), ls="--")
-            # --------------------------------------------------------------------------------------------------------------- #
             axs[ax_x, ax_y].legend()
             j+=1
     plt.suptitle(plot_type+" time for "+folder_nth)
@@ -191,26 +192,24 @@ def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
     W_bar_i = lambda i : R_bar/((1-sum([rho_[j-1] for j in range(1,i)]))*(1-sum([rho_[j-1] for j in range(1, i+1)])))
     P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i(i))
 
-    t = np.arange(0,100,1)
+    t = np.arange(0,400,1)
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
 def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i):
     rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
-    P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-sum(rho_)*t/W_bar_i[i-1])
-    t = np.arange(0,100,1)
+    P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-(sum(rho_)*t)/(W_bar_i[i-1]))
+    t = np.arange(0,400,1)
     for ii in class_i:
         plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
 
 def plot_priority_file(filename_input, filename_data):
-
     add_colors_to_plot()
 
     fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     # ----------------------------- SIMULATION ----------------------------- #
-    
     i = 0
     num_pkts = input_variables["num_pkts"]
     for num_pkts_sublist in num_pkts:
@@ -233,13 +232,10 @@ def plot_priority_file(filename_input, filename_data):
             list = split[j]
             str_number = str(int(list[20][0]))
             pri = str_number[-1]
-            #print("simulated average wait time of class",j+1, np.average([l[2] for l in list]))
-            #print("-------------------------------------AVG PKT SIZE",np.average([l[4] for l in list]))
             plot_x, plot_y = get_x_y_simulation(list, "wait_pdf")
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
         i += 1
     # ---------------------------------------------------------------- #
-
     # ----------------------------- THEORETICAL ----------------------------- #
     for i in range(len(input_variables["num_sources"])):
         class_i = input_variables["num_sources"][i]
@@ -247,7 +243,7 @@ def plot_priority_file(filename_input, filename_data):
         sigma_squared_pkt_ia_time = input_variables["sigma_squared_pkt_ia_time"] if "sigma_squared_pkt_ia_time" in input_variables else False
 
         mu_ = [1/u for u in input_variables["avg_pkt_len_bits"][i]]
-        sigma_squared_pkt_len = input_variables["sigma_squared_pkt_len"][i]
+        sigma_squared_pkt_len = input_variables["sigma_squared_pkt_len"][i] if "sigma_squared_pkt_len" in input_variables else False
 
         dist_type_pkt_ia_time = input_variables["dist_type_pkt_ia_time"]
         if type(dist_type_pkt_ia_time) == type("M"):
@@ -260,8 +256,8 @@ def plot_priority_file(filename_input, filename_data):
     # ---------------------------------------------------------------------- #
     # ----------------------------- PLOT ----------------------------- #
     plt.xlabel("Time")
-    plt.ylabel("P(T<=t)")
-    plt.xlim([0,100]) #TODO: make dependant on whats beeing plotted
+    plt.ylabel("TODO") #TODO: make dependent on 
+    #plt.xlim([0,150]) #TODO: make dependant on whats beeing plotted
     plt.title("File: " + filename_data +", type: wait_pdf")
     plt.legend()
     plt.show()
@@ -270,14 +266,13 @@ def plot_priority_file(filename_input, filename_data):
 def plot_wait_times(filename_input, filename_data):
     #! plot all wait times from simulation
     #! add theoretical upper bound
-
     add_colors_to_plot()
 
     fields_data, rows_data = read_data_csv(filename_data)
-    #t = [r[1] for r in rows_data]
-    t = [r[1] for r in rows_data if r[2] > 0]
+    #t = [r[1] for r in rows_data] # With zeros
     #t_buffer = [r[2] for r in rows_data] # With zeros
-    t_buffer = [r[2] for r in rows_data if r[2] > 0]
+    t = [r[1] for r in rows_data if r[2] > 0] # Without zeros
+    t_buffer = [r[2] for r in rows_data if r[2] > 0] # Without zeros
     plt.plot(t, t_buffer, '.')
 
     with open(filename_input, 'r') as f_input:
@@ -308,7 +303,7 @@ def plot_wait_times(filename_input, filename_data):
     '''
     plt.show()
 
-def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf"):
+def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "MM"):
     add_colors_to_plot()
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -316,18 +311,12 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
     lambda_list = [sum(sublist) for sublist in all_lambdas_list]
 
-    #? How to find mu for all sources?
-    #* The expected service time for the system is the average of expected service time for each class. Mu is the inverse.
+
     avg_avg_pkt_len_bits_list = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
+
     mu_list = [1/t for t in avg_avg_pkt_len_bits_list]
 
-    t = np.arange(0, 300, 1)
-    dist_type = "MM"
-    for i in range(len(lambda_list)):
-        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
-        if type(y) == type(np.array([])):
-            plt.plot(t,y,label="theoretical")
-                      
+             
     #SIM
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
@@ -348,15 +337,38 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
         row_start = np.where(rows_data[:,0] == packet_number_start)[0][0]
         row_stop = np.where(rows_data[:,0] == packet_number_stop)[0][0]
 
+        
+        # Lambda of simulated data
+        dataset_test = rows_data[:row_start]
+        print("Simulated lambda of part {}:".format(i), 1/np.average([dataset_test[i+1][1] - dataset_test[i][1] for i in range(len(dataset_test)-1)]))
+        print(1/np.average([dataset_test[i][4] for i in range(len(dataset_test))]))
+        
+
         plot_x, plot_y = get_x_y_simulation(rows_data[:row_start], plot_type)
         plt.plot(plot_x, plot_y, label="sim", ls="--")
         rows_data = rows_data[row_stop+1:]
 
+    #---------
+    # THEORETICAL
+    t = np.arange(0, 300, 1)
+    
+    lambda_list, mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
+    print("Theoretical lambdas",lambda_list)
+    print("Theoretical mus:", mu_list)
+    for i in range(len(lambda_list)):
+        y = get_y_theoretical(mu_list[i][0], lambda_list[i][0], t, dist_type, plot_type)
+        if type(y) == type(np.array([])):
+            plt.plot(t,y,label="theoretical")
+    #-------
+    # PLOT
+    plt.xlabel("xlabel")
+    plt.ylabel("ylabel")
+    plt.title("title")
     plt.legend()
     plt.show()
+    # -------
 
 def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf"):
-
     add_colors_to_plot()
 
     with open(filename_input, 'r') as f_input:
@@ -364,17 +376,16 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
     num_pkts = input_variables["num_pkts"]
     num_sources = input_variables["num_sources"]
     priority_classes = [list(set(sublist)) for sublist in num_sources] # e.g. [1,2,3]
+
     #SIM--------------------------------------------------------------------------
     fields_data, rows_data = read_data_csv(filename_data)
-
     all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
-    #lambda_list = [sum(sublist) for sublist in all_lambdas_list]
-
 
     all_avg_pkt_len_bits = input_variables["avg_pkt_len_bits"]
     avg_avg_pkt_len_bits_list = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
-    #mu_list = [1/t for t in avg_avg_pkt_len_bits_list]
 
+    simulated_lambdas=[]
+    simulated_mus= []
     big_split = []
     for i in range(len(all_lambdas_list)):
         highest_lambda = max(all_lambdas_list[i])
@@ -396,49 +407,32 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
         rows_data = rows_data[row_stop+1:]
 
         split = [[] for n in range(len(priority_classes[i]))]
+
+        simulated_lambdas_sublist = []
+        simulated_mus_sublist = []
+
         for row in part_of_dataset:
             str_number = str(int(row[0]))
             subindex = int(str_number[-1])
             split[subindex-1].append(row)
         for j in range(len(split)):
             list_test = split[j]
+
+
+            simulated_lambdas_sublist.append(1/np.average([list_test[i+1][1] - list_test[i][1] for i in range(len(list_test)-1)]))
+            simulated_mus_sublist.append(1/np.average([list_test[i][4] for i in range(len(list_test))]))
+
             str_number = str(int(list_test[20][0]))
             pri = str_number[-1]
-            plot_x, plot_y = get_x_y_simulation(list_test, "wait_pdf")
+            plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
         big_split.append(split)
-
-
-
-    '''
-    i = 0
-    for num_pkts_sublist in num_pkts:
-        # n is list
-        n = sum(num_pkts_sublist)
-        part_of_dataset = rows_data[:n+1] # past of dataset that we are interested in for now
-        rows_data = rows_data[n+1:] # Leftover data
-        split = [[] for n in range(len(priority_classes[i]))]
-        for row in part_of_dataset:
-            str_number = str(int(row[0]))
-            subindex = int(str_number[-1])
-            split[subindex-1].append(row)
-        for j in range(len(split)):
-            list_test = split[j]
-            str_number = str(int(list_test[20][0]))
-            pri = str_number[-1]
-            plot_x, plot_y = get_x_y_simulation(list_test, "wait_pdf")
-            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
-        i += 1
-        
-    '''
+        simulated_lambdas.append(simulated_lambdas_sublist)
+        simulated_mus.append(simulated_mus_sublist)
     #-----------------------------------------------------------------------
 
-    #THEORETICAL----------------------------------------------------------------
-    '''
-    lambda_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
-    mu_list = [[1/m for m in sublist] for sublist in input_variables["avg_pkt_len_bits"]]
 
-    '''
+    #THEORETICAL----------------------------------------------------------------
     split_lambda_list = [[[] for s in sub] for sub in  priority_classes]
     split_mu_list = [[[] for s in sub] for sub in  priority_classes]
 
@@ -448,16 +442,58 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             split_mu_list[i][num_sources[i][j]-1].append(all_avg_pkt_len_bits[i][j])
 
     lambda_i = [[sum(l) for l in sublist] for sublist in split_lambda_list]
+    mu_i = []
+    for lis in range(lambda_i):
+        for j in range(lis):
+            sublist = []
+
     mu_i = [[1/np.average(u) for u in sublist] for sublist in split_mu_list]
 
-    for i in range(len(num_pkts)):
+    print("Theoretical lambdas:", lambda_i)
+    print("  Simulated lambdas:", simulated_lambdas)
+    print("    Theoretical mus:", mu_i)
+    print("      Simulated mus:", simulated_mus)
 
+    for i in range(len(num_pkts)):
         W_bar_i = [np.average([item[2] for item in l]) for l in big_split[i]] # Gather W_bar_i
         GG1_priority_theoretical(priority_classes[i], lambda_i[i], 0, mu_i[i], 0, W_bar_i)
 
-
     #---------------------------------------------------------------------------------------
 
+    # PLOT
+    plt.xlabel("xlabel")
+    plt.ylabel("ylabel")
+    plt.title("title")
     #plt.legend()
     plt.legend(frameon=False)
     plt.show()
+    # ------
+
+
+def calculate_theoretical_lambda_and_mu(filename_input):
+    with open(filename_input, 'r') as f_input:
+        input_variables = json.load(f_input)
+    avg_pkt_ia_time = input_variables["avg_pkt_ia_time"]
+    all_lambdas = [[1/v for v in sublist]for sublist in avg_pkt_ia_time]
+    avg_pkt_len_bits = input_variables["avg_pkt_len_bits"]
+    num_sources = input_variables["num_sources"]
+    priority_classes = [list(set(sublist)) for sublist in num_sources] # [[1,2,3]]
+    all_lambdas_split = [[[] for i in range(len(sublist))]for sublist in priority_classes]
+    all_pkt_len_split = [[[] for i in range(len(sublist))]for sublist in priority_classes]
+
+    for i in range(len(all_lambdas)):
+        for j in range(len(all_lambdas[i])):
+            all_lambdas_split[i][num_sources[i][j]-1].append(all_lambdas[i][j])
+            all_pkt_len_split[i][num_sources[i][j]-1].append(avg_pkt_len_bits[i][j])
+
+    lambda_i = [[sum(subsublist)for subsublist in sublist]for sublist in all_lambdas_split]
+    mu_i = [[] for sublist in avg_pkt_len_bits]
+
+    for i in range(len(all_pkt_len_split)):
+        for j in range(len(all_pkt_len_split[i])):
+            mu_i[i].append(1/(sum([(all_lambdas_split[i][j][k]/(1/all_pkt_len_split[i][j][k])) for k in range(len(all_pkt_len_split[i][j]))])/lambda_i[i][j]))
+
+    #print("lambda",lambda_i)
+    #print("mu",mu_i)
+
+    return lambda_i, mu_i

@@ -7,13 +7,10 @@ from create_list_with_given_average import create_list_with_given_average
 n = 1000
 folder = "29_DD1-pri-1000s/"
 
-
-
 avg_pkt_ia_time1 = create_list_with_given_average(n=n, avg=120,type="lambda")
 avg_pkt_ia_time2 = create_list_with_given_average(n=n, avg=180,type="lambda")
 avg_pkt_ia_time3 = create_list_with_given_average(n=n, avg=150,type="lambda")
 type_pkt_ia = "D"
-
 
 avg_pkt_len_bits = create_list_with_given_average(n=n, avg=17.5,type="mu")
 type_pkt_len = "D"
@@ -31,8 +28,7 @@ input_variables = {
     "capacity": 1, 
     "num_pkts": [[*[1000]*n ,*[1000]*n ,*[1000]*n]],
     "num_sources" : [[*[1]*n ,*[2]*n ,*[3]*n]]
-}                                                                                                                               
-
+}
 
 if not os.path.exists(folder):
     os.makedirs(folder)
