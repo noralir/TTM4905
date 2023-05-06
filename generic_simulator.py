@@ -55,7 +55,7 @@ def generic_simulator(input_variables, filename_data = False, folder_nth = False
                     env.process(packet(env = env, 
                                        pkt_size_bits = packet_size(dist_type_pkt_len = input_variables["dist_type_pkt_len"][i], 
                                                                    avg_pkt_len_bits = input_variables["avg_pkt_len_bits"][i]), 
-                                       number = str(j)+"00", #add trailing 0s to be able to be handeled by mulitple classes 
+                                       number = str(j)+"00", # add trailing 0s to be able to be handeled by mulitple classes 
                                        dist_i = i))
                     j += 1
                 j = 0

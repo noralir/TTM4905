@@ -10,7 +10,7 @@ folder = "22_DD1-10s/"
 avg_pkt_ia_time = create_list_with_given_average(n=n, avg=15)
 
 avg_pkt_len_bits = [list(range(8,18))]
-avg_pkt_len_bits.reverse()
+
 avg_pkt_len_bits = [12]*n
 
 input_variables = {
@@ -18,7 +18,7 @@ input_variables = {
     "sigma_squared_pkt_ia_time":[],
     "dist_type_pkt_ia_time": [["D"]*n], 
 
-    "avg_pkt_len_bits": avg_pkt_len_bits, 
+    "avg_pkt_len_bits": [avg_pkt_len_bits], 
     "sigma_squared_pkt_len": [],
     "dist_type_pkt_len": [["D"]*n], 
 
@@ -33,6 +33,10 @@ if not os.path.exists(folder):
 
 #write_input_file(input_variables, folder+"input.json")
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+
 plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf", dist_type="MD")
 #plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf", dist_type="MD")
+plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf", dist_type = "MD")
+#plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf")
+
 #generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")

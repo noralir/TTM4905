@@ -9,14 +9,20 @@ folder = "28_DD1-pri-100s/"
 
 
 
-avg_pkt_ia_time1 = create_list_with_given_average(n=n, avg=120,type="lambda")
-avg_pkt_ia_time2 = create_list_with_given_average(n=n, avg=180,type="lambda")
-avg_pkt_ia_time3 = create_list_with_given_average(n=n, avg=150,type="lambda")
+avg_pkt_ia_time1 = create_list_with_given_average(n=n, avg=100,type="lambda")
+avg_pkt_ia_time2 = create_list_with_given_average(n=n, avg=170,type="lambda")
+avg_pkt_ia_time3 = create_list_with_given_average(n=n, avg=130,type="lambda")
 type_pkt_ia = "D"
+
 
 
 avg_pkt_len_bits = create_list_with_given_average(n=n, avg=17.5,type="mu")
 type_pkt_len = "D"
+
+
+
+print(sum([1/l for l in avg_pkt_ia_time1]), sum([1/l for l in avg_pkt_ia_time2]), sum([1/l for l in avg_pkt_ia_time3]))
+print(1/sum(avg_pkt_len_bits))
 
 
 input_variables = {
@@ -31,7 +37,7 @@ input_variables = {
     "capacity": 1, 
     "num_pkts": [[*[10000]*n ,*[10000]*n ,*[10000]*n]],
     "num_sources" : [[*[1]*n ,*[2]*n ,*[3]*n]]
-}                                                                                                                               
+}  
 
 
 if not os.path.exists(folder):
@@ -39,7 +45,7 @@ if not os.path.exists(folder):
 
 
 
-write_input_file(input_variables, folder+"input.json")
-run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+#write_input_file(input_variables, folder+"input.json")
+#run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 
 plot_multiple_sources_with_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf")
