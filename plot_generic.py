@@ -445,9 +445,6 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             pri = str_number[-1]
             plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
-        big_split.append(split)
-
-
 
 
             simulated_lambdas_sublist.append(1/np.average([list_test[i+1][1] - list_test[i][1] for i in range(len(list_test)-1)]))
