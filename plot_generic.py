@@ -27,7 +27,9 @@ wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t)
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
 sojourn_cdf_MM1 = lambda u, l, t : False #TODO
 
-wait_pdf_MD1 = lambda u, l, t : False #TODO
+
+
+wait_pdf_MD1 = lambda u, l, t : [(1-(1-l/u)*sum([((((l/u)*k-l*t_)**k)/(math.factorial(k))*(math.e**(-((l/u)*k-l*t_)))) for k in range(math.floor(t_)+1)])) for t_ in t]
 wait_cdf_MD1 = lambda u, l, t : [((1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t]
 sojourn_pdf_MD1 = lambda u, l, t : False #TODO
 sojourn_cdf_MD1 = lambda u, l, t : False #TODO
@@ -118,7 +120,13 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     theoretical_plotted=[] # Handle if plots have been done already
     for i in range(len(lambda_list)):
         dist_type = input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] #e.g. "MM"
-        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type, sigma_squared_pkt_ia_time_list[i],sigma_squared_pkt_len_list[i])
+        y = get_y_theoretical(mu_list[i], 
+                              lambda_list[i], 
+                              t, 
+                              dist_type, 
+                              plot_type, 
+                              sigma_squared_pkt_ia_time_list[i] if type(sigma_squared_pkt_ia_time_list)==type([]) else 0,
+                              sigma_squared_pkt_len_list[i] if type(sigma_squared_pkt_len_list)==type([]) else 0)
         if dist_type == "MD":
             plt.yscale("log")
         plotted_dist = dist_type+str(lambda_list[i])+str(mu_list[i])
@@ -205,7 +213,6 @@ def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, s
 
 def plot_priority_file(filename_input, filename_data):
     add_colors_to_plot()
-
     fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -273,6 +280,7 @@ def plot_wait_times(filename_input, filename_data):
     #t_buffer = [r[2] for r in rows_data] # With zeros
     t = [r[1] for r in rows_data if r[2] > 0] # Without zeros
     t_buffer = [r[2] for r in rows_data if r[2] > 0] # Without zeros
+
     plt.plot(t, t_buffer, '.')
 
     with open(filename_input, 'r') as f_input:
@@ -308,15 +316,17 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
 
-    all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]
+    all_lambdas_list = [[1/l for l in sublist] for sublist in input_variables["avg_pkt_ia_time"]]   
     lambda_list = [sum(sublist) for sublist in all_lambdas_list]
 
+
+    avg_pkt_len_bits = input_variables["avg_pkt_len_bits"]
 
     avg_avg_pkt_len_bits_list = [np.average(b) for b in input_variables["avg_pkt_len_bits"]]
 
     mu_list = [1/t for t in avg_avg_pkt_len_bits_list]
 
-             
+
     #SIM
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
@@ -337,28 +347,41 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
         row_start = np.where(rows_data[:,0] == packet_number_start)[0][0]
         row_stop = np.where(rows_data[:,0] == packet_number_stop)[0][0]
 
+
+        sim_lambda = 1/np.average([rows_data[:row_start][i+1]-rows_data[:row_start][i] for i in range(len(rows_data[:row_start])-1)])
+        sim_mu = 1/np.average([r[4] for r in rows_data[:row_start]])
+        print("sim l and u", sim_lambda, sim_mu)
+
+
         
         # Lambda of simulated data
         dataset_test = rows_data[:row_start]
         print("Simulated lambda of part {}:".format(i), 1/np.average([dataset_test[i+1][1] - dataset_test[i][1] for i in range(len(dataset_test)-1)]))
         print(1/np.average([dataset_test[i][4] for i in range(len(dataset_test))]))
-        
+
 
         plot_x, plot_y = get_x_y_simulation(rows_data[:row_start], plot_type)
         plt.plot(plot_x, plot_y, label="sim", ls="--")
         rows_data = rows_data[row_stop+1:]
 
+
+    #Theoretical 
+    t = np.arange(0, 40, 1)
+    for i in range(len(lambda_list)):
+        print(lambda_list[i], mu_list[i])
+        y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
+        
+        if type(y) == type(np.array([])) or type(y) == type([]):
+            plt.plot(t,y,label="theoretical")
+                      
     #---------
-    # THEORETICAL
-    t = np.arange(0, 300, 1)
+
+
     
     lambda_list, mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
     print("Theoretical lambdas",lambda_list)
     print("Theoretical mus:", mu_list)
-    for i in range(len(lambda_list)):
-        y = get_y_theoretical(mu_list[i][0], lambda_list[i][0], t, dist_type, plot_type)
-        if type(y) == type(np.array([])):
-            plt.plot(t,y,label="theoretical")
+
     #-------
     # PLOT
     plt.xlabel("xlabel")
@@ -418,6 +441,14 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
         for j in range(len(split)):
             list_test = split[j]
 
+            str_number = str(int(list_test[20][0]))
+            pri = str_number[-1]
+            plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
+            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+        big_split.append(split)
+
+
+
 
             simulated_lambdas_sublist.append(1/np.average([list_test[i+1][1] - list_test[i][1] for i in range(len(list_test)-1)]))
             simulated_mus_sublist.append(1/np.average([list_test[i][4] for i in range(len(list_test))]))
@@ -429,6 +460,7 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
         big_split.append(split)
         simulated_lambdas.append(simulated_lambdas_sublist)
         simulated_mus.append(simulated_mus_sublist)
+
     #-----------------------------------------------------------------------
 
 
