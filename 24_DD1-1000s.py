@@ -25,7 +25,7 @@ input_variables = {
     "dist_type_pkt_len": [["D"]*n], 
 
     "capacity": 1, 
-    "num_pkts": [[5000]*n],
+    "num_pkts": [[1000]*n],
     "num_sources" : [[1]*n]
 }                                                                                                                               
 

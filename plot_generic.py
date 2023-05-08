@@ -22,6 +22,20 @@ def add_colors_to_plot():
     ax = plt.axes()
     ax.set_facecolor("#fffcf5")
 
+def add_labels_to_plot(dist_type, plot_type):
+    print()
+    plt.xlabel("Time")
+    if plot_type == "wait_cdf":
+        plt.ylabel("P{W<=t}")
+    elif plot_type == "wait_pdf":
+        plt.ylabel("P{W>t}")
+    elif plot_type == "sojourn_cdf":
+        plt.ylabel("P{D<=t}")
+    elif plot_type == "sojourn_pdf":
+        plt.ylabel("P{D>t}")
+    plt.title("title")
+    plt.legend()
+
 wait_pdf_MM1 = lambda u, l, t : (l/u)*math.e**(-(u-l)*t)
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
@@ -408,14 +422,11 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     #-------
 
     # PLOT
-    plt.xlabel("xlabel")
-    plt.ylabel("ylabel")
-    plt.title("title")
-    plt.legend()
+    add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
     plt.show()
     # -------
 
-def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf"):
+def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "GG"):
     add_colors_to_plot()
 
     with open(filename_input, 'r') as f_input:
@@ -509,11 +520,9 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
     #---------------------------------------------------------------------------------------
 
     # PLOT
-    plt.xlabel("xlabel")
-    plt.ylabel("ylabel")
-    plt.title("title")
-    #plt.legend()
-    plt.legend(frameon=False)
+
+    add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
+
     plt.show()
     # ------
 
