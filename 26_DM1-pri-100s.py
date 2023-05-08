@@ -33,7 +33,7 @@ if not os.path.exists(folder):
     os.makedirs(folder)
 
 
-write_input_file(input_variables, folder+"input.json")
-run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+#write_input_file(input_variables, folder+"input.json")
+#run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 
 plot_multiple_sources_with_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf")

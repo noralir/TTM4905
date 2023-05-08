@@ -23,17 +23,15 @@ def add_colors_to_plot():
     ax.set_facecolor("#fffcf5")
 
 def add_labels_to_plot(dist_type, plot_type):
-    print()
     plt.xlabel("Time")
     if plot_type == "wait_cdf":
-        plt.ylabel("P{W<=t}")
+        plt.ylabel(r"$P\{W \leq t\}$")
     elif plot_type == "wait_pdf":
         plt.ylabel("P{W>t}")
     elif plot_type == "sojourn_cdf":
         plt.ylabel("P{D<=t}")
     elif plot_type == "sojourn_pdf":
         plt.ylabel("P{D>t}")
-    plt.title("title")
     plt.legend()
 
 wait_pdf_MM1 = lambda u, l, t : (l/u)*math.e**(-(u-l)*t)
@@ -168,15 +166,13 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
                         label="theoretical,  l = " + str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3))) 
     # ------------------------------------------------------------------------------------------------------------------------- #
     # --- PLOT ---------------------------------------------------------------------------------------------------------------- #
-    plt.xlabel("Time")
-    plt.ylabel("TODO") #TODO: make dependen on pdf/cfd wait/sojourn
     #plt.xlim([0,80]) #TODO: make dependant on what's beeing plotted
     plt.title("File: " + filename_data +", type: "+plot_type)
-    plt.legend()
+    add_labels_to_plot(dist_type, plot_type)
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
-def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
+def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pdf"):
     #! plot specific folder
     #! gives a plot with multiple subplots each showing packet n
     #add_colors_to_plot() # TODO: Check if works
@@ -215,12 +211,24 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait"):
                     axs[ax_x, ax_y].plot(t, y, label="lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)))
                 axs[ax_x, ax_y].set_title(file)
                 #axs[ax_x, ax_y].set_xlim([0,80])
-                axs[ax_x, ax_y].set_xlabel("t")
+                axs[ax_x, ax_y].set_xlabel("Time")
+                
+
+                if plot_type == "wait_cdf":
+                    axs[ax_x, ax_y].set_ylabel("P{W<=t}")
+                elif plot_type == "wait_pdf":
+                    axs[ax_x, ax_y].set_ylabel("P{W>t}")
+                elif plot_type == "sojourn_cdf":
+                    axs[ax_x, ax_y].set_ylabel("P{D<=t}")
+                elif plot_type == "sojourn_pdf":
+                    axs[ax_x, ax_y].set_ylabel("P{D>t}")
+
+                
                 theoretical_plotted.append(theoretical_plot)
             # --------------------------------------------------------------------------------------------------------------- #
             axs[ax_x, ax_y].legend()
             j+=1
-    plt.suptitle(plot_type+" time for "+folder_nth)
+    plt.suptitle("Folder: "+folder_nth)
     plt.show()
 
 def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
@@ -283,19 +291,25 @@ def plot_priority_file(filename_input, filename_data):
         sigma_squared_pkt_len = input_variables["sigma_squared_pkt_len"][i] if "sigma_squared_pkt_len" in input_variables else False
 
         dist_type_pkt_ia_time = input_variables["dist_type_pkt_ia_time"]
+        dist_type = "MG"
         if type(dist_type_pkt_ia_time) == type("M"):
             if dist_type_pkt_ia_time == "M":
                 MG1_priority_theoretical(class_i, lambda_, mu_, sigma_squared_pkt_len) # Plots all classes
         elif type(dist_type_pkt_ia_time) == type([]):
+            if dist_type_pkt_ia_time.count("M") == len(dist_type_pkt_ia_time):
+                MG1_priority_theoretical(class_i, lambda_, mu_, sigma_squared_pkt_len) # Plots all classes
+        elif type(dist_type_pkt_ia_time) == type([]):
             W_bar_i = [np.average([item[2] for item in l]) for l in split] # Gather W_bar_i
             GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i)
+            dist_type = "MM"
 
     # ---------------------------------------------------------------------- #
     # ----------------------------- PLOT ----------------------------- #
-    plt.xlabel("Time")
-    plt.ylabel("TODO") #TODO: make dependent on 
     #plt.xlim([0,150]) #TODO: make dependant on whats beeing plotted
     plt.title("File: " + filename_data +", type: wait_pdf")
+
+    plt.xlabel("Time")
+    plt.ylabel(r'$\bar W_i \leq t$')
     plt.legend()
     plt.show()
     # ---------------------------------------------------------------- #
