@@ -9,7 +9,7 @@ folder = "23_DD1-100s/"
 
 
 
-avg_pkt_ia_time = create_list_with_given_average(n=n, avg=15)
+avg_pkt_ia_time = create_list_with_given_average(n=n, avg=20)
 
 
 avg_pkt_len_bits = [[x/10 for x in list(range(80,180))]]
@@ -35,5 +35,8 @@ if not os.path.exists(folder):
 
 #write_input_file(input_variables, folder+"input.json")
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+
+
 plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf", dist_type="MD")
-#generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")
+#plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_cdf", dist_type="MD")
+plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf", dist_type="MD")

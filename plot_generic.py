@@ -22,7 +22,7 @@ def add_colors_to_plot():
     ax = plt.axes()
     ax.set_facecolor("#fffcf5")
 
-wait_pdf_MM1 = lambda u, l, t : False #TODO
+wait_pdf_MM1 = lambda u, l, t : (l/u)*math.e**(-(u-l)*t)
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
 sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
 sojourn_cdf_MM1 = lambda u, l, t : False #TODO
@@ -31,7 +31,7 @@ sojourn_cdf_MM1 = lambda u, l, t : False #TODO
 
 wait_pdf_MD1 = lambda u, l, t : [(1-(1-l/u)*sum([((((l/u)*k-l*t_)**k)/(math.factorial(k))*(math.e**(-((l/u)*k-l*t_)))) for k in range(math.floor(t_)+1)])) for t_ in t]
 wait_cdf_MD1 = lambda u, l, t : [((1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t]
-sojourn_pdf_MD1 = lambda u, l, t : False #TODO
+sojourn_pdf_MD1 = lambda u, l, t :  False #[(1-(1-l/u)*sum([((((l/u)*k-l*t_)**k)/(math.factorial(k))*(math.e**(-((l/u)*k-l*t_)))) for k in range(math.floor(t_)+1)])) for t_ in t]
 sojourn_cdf_MD1 = lambda u, l, t : False #TODO
 
 sojourn_MD1_not_working = lambda u, l, t : [( (1-l) * sum( [((l*(j-t_))**j) / (math.factorial(j)) * (math.e**(-l*(j-t_))) for j in range(math.floor(t_) + 1)] )) for t_ in t] #TODO: not working
@@ -80,14 +80,30 @@ def get_x_y_simulation(rows_data, plot_type):
     hist, x_hist = [], []
     if "wait" in plot_type:
         wait = [row[2] for row in rows_data]
+
         hist, x_hist = np.histogram(wait, 100, density=True)
+
+        hist_y_list = []
+        leftover = wait
+
+        t = np.arange(0,int(max(wait)),0.5)
+        for t_ in t:
+            leftover = [r for r in wait if r > t_]
+            hist_y_list.append(len(leftover)/len(wait))
+        print("Average wait time:",np.average(wait))
+
+        hist, x_hist = hist_y_list,t
     elif "sojourn" in plot_type:
         delay = [row[2]+row[3] for row in rows_data]
         hist, x_hist = np.histogram(delay, 100, density=True)
+        x_hist = x_hist[:-1]
+
+        print("Average system time:", np.average(delay))
     if "cdf" in plot_type:
-        return x_hist[:-1], np.cumsum(hist)/np.cumsum(hist)[-1]
+        return x_hist, np.cumsum(hist)/np.cumsum(hist)[-1]
     elif "pdf" in plot_type:
-        return x_hist[:-1], hist
+        print("hist0",hist[0])
+        return x_hist, hist
 
 def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     #! SINGLE CLASS
@@ -331,6 +347,8 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
 
+    simulated_lambda_list, simulated_mu_list = [],[]
+
     for i in range(len(all_lambdas_list)):
         highest_lambda = max(all_lambdas_list[i])
         index_of_highest_lambda = all_lambdas_list[i].index(highest_lambda)
@@ -346,43 +364,49 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
 
         row_start = np.where(rows_data[:,0] == packet_number_start)[0][0]
         row_stop = np.where(rows_data[:,0] == packet_number_stop)[0][0]
-
-
-        sim_lambda = 1/np.average([rows_data[:row_start][i+1]-rows_data[:row_start][i] for i in range(len(rows_data[:row_start])-1)])
-        sim_mu = 1/np.average([r[4] for r in rows_data[:row_start]])
-        print("sim l and u", sim_lambda, sim_mu)
-
-
         
-        # Lambda of simulated data
         dataset_test = rows_data[:row_start]
-        print("Simulated lambda of part {}:".format(i), 1/np.average([dataset_test[i+1][1] - dataset_test[i][1] for i in range(len(dataset_test)-1)]))
-        print(1/np.average([dataset_test[i][4] for i in range(len(dataset_test))]))
 
+        t_buffering = [r[2] for r in dataset_test]
+        Probability_test = len([r for r in t_buffering if r == 0])/len(t_buffering)
+        print("probability:", Probability_test)
+
+
+        # Lambda and mu of simulated data
+        simulated_lambda_list.append(1/np.average([dataset_test[i+1][1] - dataset_test[i][1] for i in range(len(dataset_test)-1)]))
+        simulated_mu_list.append(1/np.average([dataset_test[i][4] for i in range(len(dataset_test))]))
 
         plot_x, plot_y = get_x_y_simulation(rows_data[:row_start], plot_type)
         plt.plot(plot_x, plot_y, label="sim", ls="--")
         rows_data = rows_data[row_stop+1:]
 
 
-    #Theoretical 
-    t = np.arange(0, 40, 1)
+    #Theoretical ---------------------------------------------------
+    t = np.arange(0, 300, 1)
+    if dist_type == "MD":
+        t = np.arange(0, 120, 1)
+        #plt.yscale("log")
     for i in range(len(lambda_list)):
-        print(lambda_list[i], mu_list[i])
+        #print(lambda_list[i], mu_list[i])
         y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
         
         if type(y) == type(np.array([])) or type(y) == type([]):
             plt.plot(t,y,label="theoretical")
                       
-    #---------
+    #------------------------------------------------------------------
 
 
-    
-    lambda_list, mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
-    print("Theoretical lambdas",lambda_list)
-    print("Theoretical mus:", mu_list)
+    #Print info
+    theoretical_lambda_list, theoretical_mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
+    print("Theoretical lambdas", theoretical_lambda_list)
+    print(" Simulated lambdas:", simulated_lambda_list)
+    print("   Theoretical mus:", theoretical_mu_list)
+    print("     Simulated mus:", simulated_mu_list)
 
+
+    print(wait_pdf_MD1(mu_list[0],lambda_list[0],[0,1,2,3,4,5,6,7,8,9,10]))
     #-------
+
     # PLOT
     plt.xlabel("xlabel")
     plt.ylabel("ylabel")
@@ -446,14 +470,9 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
             plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
 
-
             simulated_lambdas_sublist.append(1/np.average([list_test[i+1][1] - list_test[i][1] for i in range(len(list_test)-1)]))
             simulated_mus_sublist.append(1/np.average([list_test[i][4] for i in range(len(list_test))]))
 
-            str_number = str(int(list_test[20][0]))
-            pri = str_number[-1]
-            plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
-            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
         big_split.append(split)
         simulated_lambdas.append(simulated_lambdas_sublist)
         simulated_mus.append(simulated_mus_sublist)
@@ -521,8 +540,5 @@ def calculate_theoretical_lambda_and_mu(filename_input):
     for i in range(len(all_pkt_len_split)):
         for j in range(len(all_pkt_len_split[i])):
             mu_i[i].append(1/(sum([(all_lambdas_split[i][j][k]/(1/all_pkt_len_split[i][j][k])) for k in range(len(all_pkt_len_split[i][j]))])/lambda_i[i][j]))
-
-    #print("lambda",lambda_i)
-    #print("mu",mu_i)
 
     return lambda_i, mu_i
