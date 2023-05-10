@@ -26,5 +26,8 @@ if not os.path.exists(folder):
 
 #write_input_file(input_variables, folder+"input.json")
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
-plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf")
+plot_multiple_sources_no_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="sojourn_pdf", show_plot=True)
 #generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")
+
+folder2 = "20_DM1-10s/"
+plot_multiple_sources_no_priority(filename_input=folder2+"input.json", filename_data=folder2+"data/0.csv", plot_type="sojourn_pdf")

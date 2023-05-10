@@ -21,5 +21,5 @@ write_input_file(input_variables, folder+"input.json")
 
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 
-plot_priority_file(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")
+plot_priority_file(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", dist_type="MG")
 
