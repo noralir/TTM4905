@@ -23,7 +23,7 @@ def add_colors_to_plot():
     ax.set_facecolor("#fffcf5")
 
 def add_labels_to_plot(dist_type, plot_type):
-    plt.xlabel("Time")
+    plt.xlabel("t")
     if plot_type == "wait_cdf":
         plt.ylabel(r"$P\{W \leq t\}$")
     elif plot_type == "wait_pdf":
@@ -225,7 +225,7 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
                     axs[ax_x, ax_y].plot(t, y, label="lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)), zorder=0)
                 axs[ax_x, ax_y].set_title(file)
                 #axs[ax_x, ax_y].set_xlim([0,80])
-                axs[ax_x, ax_y].set_xlabel("Time")
+                axs[ax_x, ax_y].set_xlabel("t")
                 
 
                 if plot_type == "wait_cdf":
@@ -316,7 +316,7 @@ def plot_priority_file(filename_input, filename_data, dist_type = "MG"):
     plt.xlim([0,500]) #TODO: make dependant on whats beeing plotted
     plt.title("File: " + filename_data +", type: wait_pdf")
 
-    plt.xlabel("Time")
+    plt.xlabel("t")
     plt.ylabel(r'$P\{\bar W_i \leq t\}$')
     plt.legend()
     plt.show()
