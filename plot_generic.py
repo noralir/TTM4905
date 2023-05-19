@@ -142,7 +142,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
     plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
-    add_colors_to_plot(choice="two_pink")
+    add_colors_to_plot(choice="two_green")
     # GATHER VARIABLES AND DATA 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -196,7 +196,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     
     add_labels_to_plot(dist_type, plot_type)
 
-    plt.yticks([0,0.01,0.02,0.03])
+    #plt.yticks([0,0.01,0.02,0.03])
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
