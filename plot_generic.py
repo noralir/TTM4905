@@ -12,18 +12,38 @@ from readdatacsv import read_data_csv
 # TODO four
 '''
 
-def add_colors_to_plot():
+def add_colors_to_plot(choice = False):
     cl3 = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f']
     cl4 = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#f781bf','#a65628'] #! Good
     cl5 = ['#1b9e77','#d95f02','#7570b3','#e7298a','#66a61e','#e6ab02'] #! Good
     cl6 = ['#7fc97f','#beaed4','#fdc086','#ffff99','#386cb0','#f0027f']
-    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=cl5)
+
+    color_two_green = ['#7fc97f','#1b9e77']
+    color_two_pink = ['#f4cae4', '#e7298a']
+    color_two_blue = ['#cbd5e8', '#8da0eb']
+    color_nth = ['#7fc97f','#1b9e77', '#f4cae4', '#e7298a', '#cbd5e8', '#8da0eb', '#a6d854', '#e78ac3'] # Need 8
+    color_pri = ['#7fc97f', '#f4cae4','#cbd5e8', '#1b9e77','#e7298a','#8da0eb'] # Need 6
+
+    default = color_two_pink
+
+    if choice == "nth":
+        default = color_nth
+    elif choice == "two_green":
+        default = color_two_green
+    elif choice == "two_pink":
+        default = color_two_pink
+    elif choice == "two_blue":
+        default = color_two_blue
+    elif choice == "pri":
+        default = color_pri
+
+    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=default)
 
     ax = plt.axes()
     ax.set_facecolor("#fffcf5")
 
 def add_labels_to_plot(dist_type, plot_type):
-    plt.xlabel("t")
+    plt.xlabel(r"$t$")
     if plot_type == "wait_cdf":
         plt.ylabel(r"$P\{W \leq t\}$")
     elif plot_type == "wait_pdf":
@@ -121,7 +141,8 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
     #! SINGLE CLASS
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
-    add_colors_to_plot()
+    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
+    add_colors_to_plot(choice="two_pink")
     # GATHER VARIABLES AND DATA 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -139,8 +160,9 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
         test = rows_data[:n+1]
         rows_data = rows_data[n+1:]
         plot_x, plot_y = get_x_y_simulation(test, plot_type)
+        label1 = r"$Part $" + str(i) +r"$, \lambda=$"+str(round(lambda_list[i], 3))+r"$, \mu=$"+str(round(mu_list[i],3))
         plt.plot(plot_x, plot_y, 
-                 label="run: " + str(i) +", lambda="+str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3)), 
+                 label=label1, 
                  ls="--", zorder=10)
         i += 1
     # ------------------------------------------------------------------------------------------------------------------------- #
@@ -162,39 +184,34 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
         if plotted_dist not in theoretical_plotted:
             theoretical_plotted.append(plotted_dist) #Only plot if not already plotted
             if type(y) == type(np.array([])): #Only plot if dist is implemented
+                label1 = r"$Theoretical,  \lambda = $" + str(round(lambda_list[i], 3))+r"$, \mu=$"+str(round(mu_list[i],3))
                 plt.plot(t, 
                         y, 
-                        label="theoretical,  l = " + str(round(lambda_list[i], 3))+", mu="+str(round(mu_list[i],3)), zorder=0) 
+                        label=label1, zorder=0) 
     # ------------------------------------------------------------------------------------------------------------------------- #
     # --- PLOT ---------------------------------------------------------------------------------------------------------------- #
     #plt.xlim([0,80]) #TODO: make dependant on what's beeing plotted
-    title = ""
-    if "pdf" in plot_type:
-        title += "Probability density function for "
-    elif "cdf" in plot_type:
-        title += "Cummulative density function for "
-    if "wait" in plot_type:
-        title += "wait time in " + dist_type + "1 system"
-    elif "sojourn" in plot_type:
-        title += "sojourn time in " + dist_type + "1 system"
 
-    #plt.title("File: " + filename_data +", type: "+plot_type)
-    plt.title(title)
-
+    #plt.title("")
+    
     add_labels_to_plot(dist_type, plot_type)
+
+    plt.yticks([0,0.01,0.02,0.03])
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
 def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pdf"):
     #! plot specific folder
     #! gives a plot with multiple subplots each showing packet n
-    add_colors_to_plot() # TODO: Check if works
+    add_colors_to_plot(choice="nth") # TODO: Check if works
     # SINGLE CLASS #
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
     t = np.arange(0, 150, 1)
-    fig, axs = plt.subplots(2, 3)
+    fig, axs = plt.subplots(2, 3, num=filename_input.split("/")[0])
+
     theoretical_plotted = []
+    
     for i in indexes:
         dist_type = input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] #e.g. "MM"
         lambda_ = 1/input_variables["avg_pkt_ia_time"][i]
@@ -209,9 +226,10 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
             fields_data, rows_data = read_data_csv(folder_nth_i + file)
             plot_x, plot_y = get_x_y_simulation(rows_data, plot_type)
             axs[ax_x, ax_y].set_facecolor("#fffcf5")
+            label1 = r"$Part $" + str(i) + r"$, \lambda = $" + str(round(lambda_, 3)) + r"$, \mu = $" + str(round(mu_,3))
             axs[ax_x, ax_y].plot(plot_x, 
                                  plot_y, 
-                                 label=str(i)+"/"+file+", lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)), ls="--", zorder=10)
+                                 label= label1, ls="--", zorder=10)
             # --------------------------------------------------------------------------------------------------------------- #
             # --- THEORETICAL ----------------------------------------------------------------------------------------------- #
             theoretical_plot = dist_type+str(lambda_)+"_"+file
@@ -222,10 +240,12 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
                 elif dist_type == "MD":
                     axs[ax_x, ax_y].set_yscale("log")
                 if type(y) == type(np.array([])):
-                    axs[ax_x, ax_y].plot(t, y, label="lamdba="+str(round(lambda_, 3))+", mu="+str(round(mu_,3)), zorder=0)
-                axs[ax_x, ax_y].set_title(file)
-                #axs[ax_x, ax_y].set_xlim([0,80])
-                axs[ax_x, ax_y].set_xlabel("t")
+                    label1 = r"$Theoretical, \lambda=$"+str(round(lambda_, 3))+r"$, \mu=$"+str(round(mu_,3))
+                    label2 = r"$meh$"
+                    axs[ax_x, ax_y].plot(t, y, label=label1, zorder=0)
+                axs[ax_x, ax_y].set_title("Packet #"+file[:-4])
+                axs[ax_x, ax_y].set_xlim([0,150])
+                axs[ax_x, ax_y].set_xlabel(r"$t$")
                 
 
                 if plot_type == "wait_cdf":
@@ -240,9 +260,18 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
                 
                 theoretical_plotted.append(theoretical_plot)
             # --------------------------------------------------------------------------------------------------------------- #
-            axs[ax_x, ax_y].legend()
+            
+            #axs[ax_x, ax_y].legend()
             j+=1
-    plt.suptitle("Folder: "+folder_nth)
+    
+    subplots = [[0,0],[0,1],[0,2],[1,0], [1,1]]
+    for subplot in subplots:
+        handles, labels = axs[subplot[0], subplot[1]].get_legend_handles_labels()
+        order = [1,3,5,0,2,4,6,7]
+        axs[subplot[0], subplot[1]].legend([handles[i] for i in order], [labels[i] for i in order])
+
+    
+    #plt.suptitle("Packet #n for "+folder_nth[3:6], size=20)
     plt.show()
 
 def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
@@ -254,17 +283,20 @@ def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
 
     t = np.arange(0,400,1)
     for ii in class_i:
-        plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
+        label1 = r"$Theoretical, priority=$" +str(ii)
+        plt.plot(t, P_W_i_greater_than_t(ii, t), label=label1, zorder=0)
 
 def GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i):
     rho_ = [lambda_[o]/mu_[o] for o in range(len(lambda_))]
     P_W_i_greater_than_t = lambda i, t : sum(rho_)*math.e**(-(sum(rho_)*t)/(W_bar_i[i-1]))
     t = np.arange(0,400,1)
     for ii in class_i:
-        plt.plot(t, P_W_i_greater_than_t(ii, t), label=str(ii))
+        label1 = r"$Theoretical, priority=$" +str(ii)
+        plt.plot(t, P_W_i_greater_than_t(ii, t), label=label1, zorder=0)
 
 def plot_priority_file(filename_input, filename_data, dist_type = "MG"):
-    add_colors_to_plot()
+    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
+    add_colors_to_plot(choice="pri")
     fields_data, rows_data = read_data_csv(filename_data)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -292,7 +324,8 @@ def plot_priority_file(filename_input, filename_data, dist_type = "MG"):
             str_number = str(int(list[20][0]))
             pri = str_number[-1]
             plot_x, plot_y = get_x_y_simulation(list, "wait_pdf")
-            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+            label1 = r"$Simulated, part $" + str(i) + r"$, priority = $" + pri
+            plt.plot(plot_x, plot_y, label=label1, ls="--")
         i += 1
     # ---------------------------------------------------------------- #
     # ----------------------------- THEORETICAL ----------------------------- #
@@ -313,12 +346,14 @@ def plot_priority_file(filename_input, filename_data, dist_type = "MG"):
         
     # ---------------------------------------------------------------------- #
     # ----------------------------- PLOT ----------------------------- #
-    plt.xlim([0,500]) #TODO: make dependant on whats beeing plotted
-    plt.title("File: " + filename_data +", type: wait_pdf")
+    plt.xlim([0,400]) #TODO: make dependant on whats beeing plotted
+    #plt.title("File: " + filename_data +", type: wait_pdf")
 
-    plt.xlabel("t")
+    plt.xlabel(r"$t$")
     plt.ylabel(r'$P\{\bar W_i \leq t\}$')
-    plt.legend()
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [3,4,5,0,1,2]
+    plt.legend([handles[i] for i in order], [labels[i] for i in order])
     plt.show()
     # ---------------------------------------------------------------- #
 
@@ -361,9 +396,11 @@ def plot_wait_times(filename_input, filename_data):
         if W_upper_bound:
             plt.plot(t, [W_upper_bound] * len(t))
     '''
+
     plt.show()
 
 def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "MM", show_plot = True):
+    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
     add_colors_to_plot()
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -405,7 +442,7 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
 
         t_buffering = [r[2] for r in dataset_test]
         Probability_test = len([r for r in t_buffering if r == 0])/len(t_buffering)
-        print("probability:", Probability_test)
+        #print("probability:", Probability_test)
 
 
         # Lambda and mu of simulated data
@@ -413,7 +450,8 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
         simulated_mu_list.append(1/np.average([dataset_test[i][4] for i in range(len(dataset_test))]))
 
         plot_x, plot_y = get_x_y_simulation(rows_data[:row_start], plot_type)
-        plt.plot(plot_x, plot_y, label="sim", ls="--")
+        label1 = r"$Part $" + str(i) +r"$, \lambda=$"+str(round(lambda_list[i], 3))+r"$, \mu=$"+str(round(mu_list[i],3))
+        plt.plot(plot_x, plot_y, label=label1, ls="--", zorder=10)
         rows_data = rows_data[row_stop+1:]
 
 
@@ -427,12 +465,14 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
         y = get_y_theoretical(mu_list[i], lambda_list[i], t, dist_type, plot_type)
         
         if type(y) == type(np.array([])) or type(y) == type([]):
-            plt.plot(t,y,label="theoretical")
+            label1 = r"$Theoretical,  \lambda = $" + str(round(lambda_list[i], 3))+r"$, \mu=$"+str(round(mu_list[i],3))
+            plt.plot(t,y,label=label1, zorder=0)
                       
     #------------------------------------------------------------------
 
 
     #Print info
+    '''
     theoretical_lambda_list, theoretical_mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
     print("Theoretical lambdas", theoretical_lambda_list)
     print(" Simulated lambdas:", simulated_lambda_list)
@@ -441,17 +481,20 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
 
 
     print(wait_pdf_MD1(mu_list[0],lambda_list[0],[0,1,2,3,4,5,6,7,8,9,10]))
+    '''
     #-------
 
     # PLOT
     if show_plot:
+        plt.title("", size=20)
         add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
-
+        plt.xlim([0,200])
         plt.show()
     # -------
 
 def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "GG"):
-    add_colors_to_plot()
+    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
+    add_colors_to_plot(choice="pri")
 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -503,7 +546,8 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             str_number = str(int(list_test[20][0]))
             pri = str_number[-1]
             plot_x, plot_y = get_x_y_simulation(list_test, plot_type)
-            plt.plot(plot_x, plot_y, label="subindex"+str(j)+", priority: "+pri+" sim part "+str(i), ls="--")
+            label1 = r"$Simulated, part $" + str(i) + r"$, priority = $" + pri
+            plt.plot(plot_x, plot_y, label=label1, ls="--", zorder=10)
 
             simulated_lambdas_sublist.append(1/np.average([list_test[i+1][1] - list_test[i][1] for i in range(len(list_test)-1)]))
             simulated_mus_sublist.append(1/np.average([list_test[i][4] for i in range(len(list_test))]))
@@ -525,17 +569,13 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
             split_mu_list[i][num_sources[i][j]-1].append(all_avg_pkt_len_bits[i][j])
 
     lambda_i = [[sum(l) for l in sublist] for sublist in split_lambda_list]
-    mu_i = []
-    for lis in range(lambda_i):
-        for j in range(lis):
-            sublist = []
-
     mu_i = [[1/np.average(u) for u in sublist] for sublist in split_mu_list]
-
+    '''
     print("Theoretical lambdas:", lambda_i)
     print("  Simulated lambdas:", simulated_lambdas)
     print("    Theoretical mus:", mu_i)
     print("      Simulated mus:", simulated_mus)
+    '''
 
     for i in range(len(num_pkts)):
         W_bar_i = [np.average([item[2] for item in l]) for l in big_split[i]] # Gather W_bar_i
@@ -546,7 +586,12 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
     # PLOT
 
     add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
-
+    #plt.title("", size=20)
+    handles, labels = plt.gca().get_legend_handles_labels()
+    order = [3,4,5,0,1,2]
+    plt.legend([handles[i] for i in order], [labels[i] for i in order])
+    plt.xlim([0,300])
+    
     plt.show()
     # ------
 
