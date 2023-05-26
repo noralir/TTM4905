@@ -21,6 +21,7 @@ def add_colors_to_plot(choice = False):
     color_two_green = ['#7fc97f','#1b9e77']
     color_two_pink = ['#f4cae4', '#e7298a']
     color_two_blue = ['#cbd5e8', '#8da0eb']
+    color_two_orange = ['#fdb462','#ff7f00']
     color_nth = ['#7fc97f','#1b9e77', '#f4cae4', '#e7298a', '#cbd5e8', '#8da0eb', '#a6d854', '#e78ac3'] # Need 8
     color_pri = ['#7fc97f', '#f4cae4','#cbd5e8', '#1b9e77','#e7298a','#8da0eb'] # Need 6
 
@@ -34,6 +35,8 @@ def add_colors_to_plot(choice = False):
         default = color_two_pink
     elif choice == "two_blue":
         default = color_two_blue
+    elif choice == "two_orange":
+        default = color_two_orange
     elif choice == "pri":
         default = color_pri
 
@@ -57,7 +60,7 @@ def add_labels_to_plot(dist_type, plot_type):
 
 wait_pdf_MM1 = lambda u, l, t : (l/u)*math.e**(-(u-l)*t)
 wait_cdf_MM1 = lambda u, l, t : 1 - l/u * math.e**(-(u-l)*t) 
-sojourn_pdf_MM1 = lambda u, l, t : (u-l) * math.e**(-(u-l)*t) 
+sojourn_pdf_MM1 = lambda u, l, t : math.e**(-(u-l)*t) 
 sojourn_cdf_MM1 = lambda u, l, t : False #TODO
 
 
@@ -114,11 +117,10 @@ def get_x_y_simulation(rows_data, plot_type):
     if "wait" in plot_type:
         wait = [row[2] for row in rows_data]
 
-        hist, x_hist = np.histogram(wait, 100, density=True)
+        #hist, x_hist = np.histogram(wait, 100, density=True)
 
         hist_y_list = []
         leftover = wait
-
         t = np.arange(0,int(max(wait)),0.5)
         for t_ in t:
             leftover = [r for r in wait if r > t_]
@@ -130,20 +132,28 @@ def get_x_y_simulation(rows_data, plot_type):
         delay = [row[2]+row[3] for row in rows_data]
         hist, x_hist = np.histogram(delay, 100, density=True)
         x_hist = x_hist[:-1]
-
+        
+        hist_y_list = []
+        leftover = delay
+        t = np.arange(0,int(max(delay)),0.5)
+        for t_ in t:
+            leftover = [r for r in delay if r > t_]
+            hist_y_list.append(len(leftover)/len(delay))
+        hist, x_hist = hist_y_list,t
         #print("Average system time:", np.average(delay))
+        
     if "cdf" in plot_type:
         return x_hist, np.cumsum(hist)/np.cumsum(hist)[-1]
     elif "pdf" in plot_type:
         #print("hist0",hist[0])
         return x_hist, hist
 
-def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
+def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf",color_choice="two_green"):
     #! SINGLE CLASS
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
     plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
-    add_colors_to_plot(choice="two_green")
+    add_colors_to_plot(choice=color_choice)
     # GATHER VARIABLES AND DATA 
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
@@ -179,25 +189,23 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf"):
                               plot_type, 
                               sigma_squared_pkt_ia_time_list[i] if type(sigma_squared_pkt_ia_time_list)==type([]) else 0,
                               sigma_squared_pkt_len_list[i] if type(sigma_squared_pkt_len_list)==type([]) else 0)
-        if dist_type == "MD":
-            plt.yscale("log")
         plotted_dist = dist_type+str(lambda_list[i])+str(mu_list[i])
         if plotted_dist not in theoretical_plotted:
             theoretical_plotted.append(plotted_dist) #Only plot if not already plotted
-            if type(y) == type(np.array([])): #Only plot if dist is implemented
+            if (type(y) == type(np.array([])) or (type(y)==type([]))): #Only plot if dist is implemented
                 label1 = r"$Theoretical,  \lambda = $" + str(round(lambda_list[i], 3))+r"$, \mu=$"+str(round(mu_list[i],3))
                 plt.plot(t, 
                         y, 
                         label=label1, zorder=0) 
     # ------------------------------------------------------------------------------------------------------------------------- #
     # --- PLOT ---------------------------------------------------------------------------------------------------------------- #
-    #plt.xlim([0,80]) #TODO: make dependant on what's beeing plotted
 
-    #plt.title("")
     
     add_labels_to_plot(dist_type, plot_type)
-
-    #plt.yticks([0,0.01,0.02,0.03])
+    plt.xlim([0,100])
+    #plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7])
+    #plt.yticks([0.00,0.01,0.02,0.03])
+    #plt.yticks([0.0,0.2,0.4,0.6,0.8,1.0])
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
@@ -322,24 +330,26 @@ def plot_gen_nth_single_plots(filename_input, folder_nth, indexes = [0], plot_ty
     
     plot_nums = [0,10,100,1000,10000,100000]
     k=0
-    #plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#1b9e77','#e7298a','#8da0eb'])
+    plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#1b9e77','#e7298a','#8da0eb'])
     for subplot in plotting:
 
         plt.figure(num=str(plot_nums[k]),figsize=(5, 4))
         ax = plt.axes()
         ax.set_facecolor("#fffcf5")
         for dic in subplot:
-            #if dic["ls"] == "-":
-            plt.plot(dic["x"], dic["y"], label= dic["label"], ls=dic["ls"], zorder=dic["zorder"])
+            if dic["ls"] == "-":
+                plt.plot(dic["x"], dic["y"], label= dic["label"], ls=dic["ls"], zorder=dic["zorder"])
         
         plt.xlabel(r"$t$")
         plt.xlim([0,150])
         plt.ylabel(ylabel)
+        plt.yticks([0.0, 0.1, 0.2,0.3,0.4,0.5,0.6,0.7,0.8])
         handles, labels = plt.gca().get_legend_handles_labels()
         order = [1,3,5,0,2,4,6,7]
-        plt.legend([handles[i] for i in order], [labels[i] for i in order])
-        #plt.legend()
+        #plt.legend([handles[i] for i in order], [labels[i] for i in order])
+        plt.legend()
         plt.show()
+
         k+=1
     
 
@@ -411,15 +421,16 @@ def plot_priority_file(filename_input, filename_data, dist_type = "MG"):
             MG1_priority_theoretical(class_i, lambda_, mu_, sigma_squared_pkt_len) # Plots all classes
         elif dist_type == "GG":
             W_bar_i = [np.average([item[2] for item in l]) for l in split] # Gather W_bar_i
+            print("W_bar_i =", W_bar_i)
             GG1_priority_theoretical(class_i, lambda_, sigma_squared_pkt_ia_time, mu_, sigma_squared_pkt_len, W_bar_i)
         
     # ---------------------------------------------------------------------- #
     # ----------------------------- PLOT ----------------------------- #
-    plt.xlim([0,400]) #TODO: make dependant on whats beeing plotted
+    plt.xlim([0,350]) #TODO: make dependant on whats beeing plotted
     #plt.title("File: " + filename_data +", type: wait_pdf")
 
     plt.xlabel(r"$t$")
-    plt.ylabel(r'$P\{\bar W_i \leq t\}$')
+    plt.ylabel(r'$P\{\overline{W}_i > t\}$')
     handles, labels = plt.gca().get_legend_handles_labels()
     order = [3,4,5,0,1,2]
     plt.legend([handles[i] for i in order], [labels[i] for i in order])
@@ -468,9 +479,9 @@ def plot_wait_times(filename_input, filename_data):
 
     plt.show()
 
-def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "MM", show_plot = True):
+def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="wait_pdf", dist_type = "MM", show_plot = True, color_choice="two_pink"):
     plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
-    add_colors_to_plot()
+    add_colors_to_plot(choice=color_choice)
     with open(filename_input, 'r') as f_input:
         input_variables = json.load(f_input)
 
@@ -488,6 +499,8 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     #SIM
     num_pkts = [sum(n) for n in input_variables["num_pkts"]]
     fields_data, rows_data = read_data_csv(filename_data)
+
+    max_delay = max(rows_data[:,2])
 
     simulated_lambda_list, simulated_mu_list = [],[]
 
@@ -525,9 +538,12 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
 
 
     #Theoretical ---------------------------------------------------
+    
     t = np.arange(0, 300, 1)
+    t = np.arange(0, int(max_delay), 1)
+
     if dist_type == "MD":
-        t = np.arange(0, 120, 1)
+        t = np.arange(0, 145, 1)
         #plt.yscale("log")
     for i in range(len(lambda_list)):
         #print(lambda_list[i], mu_list[i])
@@ -557,7 +573,7 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     if show_plot:
         plt.title("", size=20)
         add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
-        plt.xlim([0,200])
+        plt.xlim([0,100])
         plt.show()
     # -------
 

@@ -1,9 +1,1 @@
-{
-    "avg_pkt_ia_time": [2], 
-    "dist_type_pkt_ia_time": ["M"], 
-    "avg_pkt_len_bits": [1], 
-    "variance_pkt_len_bits": [0], 
-    "dist_type_pkt_len": ["D"],
-    "capacity": 1, 
-    "num_pkts": [1000000]
-}
+{"avg_pkt_ia_time": [15], "dist_type_pkt_ia_time": ["M"], "avg_pkt_len_bits": [10], "variance_pkt_len_bits": [0], "sigma_squared_pkt_len": [0], "dist_type_pkt_len": ["D"], "capacity": 1, "num_pkts": [100000]}
