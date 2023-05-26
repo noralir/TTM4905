@@ -21,6 +21,8 @@ def changing_parameters():
     plt.xlabel(r"$Packet #$")
     plt.ylabel(r"$Parameter$")
 
+    plt.yticks([0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14, 0.16, 0.18])
+
     plt.legend()
 
     plt.show() 

@@ -38,6 +38,7 @@ def add_colors_to_plot(choice = False):
         default = color_pri
 
     plt.rcParams['axes.prop_cycle'] = plt.cycler(color=default)
+    
 
     ax = plt.axes()
     ax.set_facecolor("#fffcf5")
@@ -47,11 +48,11 @@ def add_labels_to_plot(dist_type, plot_type):
     if plot_type == "wait_cdf":
         plt.ylabel(r"$P\{W \leq t\}$")
     elif plot_type == "wait_pdf":
-        plt.ylabel("P{W>t}")
+        plt.ylabel(r"$P\{W>t\}$")
     elif plot_type == "sojourn_cdf":
-        plt.ylabel("P{D<=t}")
+        plt.ylabel(r"$P\{D<=t\}$")
     elif plot_type == "sojourn_pdf":
-        plt.ylabel("P{D>t}")
+        plt.ylabel(r"$P\{D>t\}$")
     plt.legend()
 
 wait_pdf_MM1 = lambda u, l, t : (l/u)*math.e**(-(u-l)*t)
@@ -210,6 +211,7 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
     t = np.arange(0, 150, 1)
     fig, axs = plt.subplots(2, 3, num=filename_input.split("/")[0])
 
+
     theoretical_plotted = []
     
     for i in indexes:
@@ -227,35 +229,31 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
             plot_x, plot_y = get_x_y_simulation(rows_data, plot_type)
             axs[ax_x, ax_y].set_facecolor("#fffcf5")
             label1 = r"$Part $" + str(i) + r"$, \lambda = $" + str(round(lambda_, 3)) + r"$, \mu = $" + str(round(mu_,3))
-            axs[ax_x, ax_y].plot(plot_x, 
-                                 plot_y, 
-                                 label= label1, ls="--", zorder=10)
+            axs[ax_x, ax_y].plot(plot_x, plot_y, label= label1, ls="--", zorder=10)
             # --------------------------------------------------------------------------------------------------------------- #
             # --- THEORETICAL ----------------------------------------------------------------------------------------------- #
             theoretical_plot = dist_type+str(lambda_)+"_"+file
             if theoretical_plot not in theoretical_plotted:
                 y = get_y_theoretical(mu_, lambda_, t, dist_type, plot_type)
-                if dist_type == "MM":
-                    axs[ax_x, ax_y].set_ylabel("F_S(t)")
-                elif dist_type == "MD":
+                if dist_type == "MD":
                     axs[ax_x, ax_y].set_yscale("log")
                 if type(y) == type(np.array([])):
                     label1 = r"$Theoretical, \lambda=$"+str(round(lambda_, 3))+r"$, \mu=$"+str(round(mu_,3))
-                    label2 = r"$meh$"
                     axs[ax_x, ax_y].plot(t, y, label=label1, zorder=0)
-                axs[ax_x, ax_y].set_title("Packet #"+file[:-4])
+
+                #axs[ax_x, ax_y].set_title("Packet #"+file[:-4])
                 axs[ax_x, ax_y].set_xlim([0,150])
                 axs[ax_x, ax_y].set_xlabel(r"$t$")
                 
 
                 if plot_type == "wait_cdf":
-                    axs[ax_x, ax_y].set_ylabel("P{W<=t}")
+                    axs[ax_x, ax_y].set_ylabel(r"$P\{W<=t\}$")
                 elif plot_type == "wait_pdf":
-                    axs[ax_x, ax_y].set_ylabel("P{W>t}")
+                    axs[ax_x, ax_y].set_ylabel(r"$P\{W>t\}$")
                 elif plot_type == "sojourn_cdf":
-                    axs[ax_x, ax_y].set_ylabel("P{D<=t}")
+                    axs[ax_x, ax_y].set_ylabel(r"$P\{D<=t\}$")
                 elif plot_type == "sojourn_pdf":
-                    axs[ax_x, ax_y].set_ylabel("P{D>t}")
+                    axs[ax_x, ax_y].set_ylabel(r"$P\{D>t\}$")
 
                 
                 theoretical_plotted.append(theoretical_plot)
@@ -272,7 +270,78 @@ def plot_gen_nth(filename_input, folder_nth, indexes = [0], plot_type = "wait_pd
 
     
     #plt.suptitle("Packet #n for "+folder_nth[3:6], size=20)
+
     plt.show()
+
+def plot_gen_nth_single_plots(filename_input, folder_nth, indexes = [0], plot_type = "wait_pdf"):
+    #! plot specific folder
+    add_colors_to_plot(choice="nth")
+    # SINGLE CLASS #
+    with open(filename_input, 'r') as f_input:
+        input_variables = json.load(f_input)
+    t = np.arange(0, 150, 1)
+    plotting = [[], [], [], [], []]
+    theoretical_plotted = []
+    for i in indexes:
+        dist_type = input_variables["dist_type_pkt_ia_time"][i][0] + input_variables["dist_type_pkt_len"][i][0] #e.g. "MM"
+        lambda_ = 1/input_variables["avg_pkt_ia_time"][i]
+        mu_ = 1/((input_variables["avg_pkt_len_bits"][i]/input_variables["capacity"]))
+        folder_nth_i = folder_nth + str(i) + "/"
+        j=0
+        files = os.listdir(folder_nth_i)
+        files.sort()
+        for file in files:
+            # --- SIMULATED ------------------------------------------------------------------------------------------------- #
+            fields_data, rows_data = read_data_csv(folder_nth_i + file)
+            plot_x, plot_y = get_x_y_simulation(rows_data, plot_type)
+            label1 = r"$Part $" + str(i) + r"$, \lambda = $" + str(round(lambda_, 3)) + r"$, \mu = $" + str(round(mu_,3))
+            plotting[j].append({"x": plot_x, "y": plot_y, "label": label1, "ls": "--", "zorder": 10})
+            # --------------------------------------------------------------------------------------------------------------- #
+            # --- THEORETICAL ----------------------------------------------------------------------------------------------- #
+            theoretical_plot = dist_type+str(lambda_)+"_"+file
+            if theoretical_plot not in theoretical_plotted:
+                y = get_y_theoretical(mu_, lambda_, t, dist_type, plot_type)
+                if type(y) == type(np.array([])):
+                    label1 = r"$Theoretical, \lambda=$"+str(round(lambda_, 3))+r"$, \mu=$"+str(round(mu_,3))
+                    plotting[j].append({"x": t, "y": y, "label": label1, "ls": "-", "zorder": 0})
+                                       
+                theoretical_plotted.append(theoretical_plot)
+            # --------------------------------------------------------------------------------------------------------------- #
+            j+=1
+    
+
+    ylabel = ""
+    if plot_type == "wait_cdf":
+        ylabel = r"$P\{W<=t\}$"
+    elif plot_type == "wait_pdf":
+        ylabel = r"$P\{W>t\}$"
+    elif plot_type == "sojourn_cdf":
+        ylabel = r"$P\{D<=t\}$"
+    elif plot_type == "sojourn_pdf":
+        ylabel = r"$P\{D>t\}$"
+    
+    plot_nums = [0,10,100,1000,10000,100000]
+    k=0
+    #plt.rcParams['axes.prop_cycle'] = plt.cycler(color=['#1b9e77','#e7298a','#8da0eb'])
+    for subplot in plotting:
+
+        plt.figure(num=str(plot_nums[k]),figsize=(5, 4))
+        ax = plt.axes()
+        ax.set_facecolor("#fffcf5")
+        for dic in subplot:
+            #if dic["ls"] == "-":
+            plt.plot(dic["x"], dic["y"], label= dic["label"], ls=dic["ls"], zorder=dic["zorder"])
+        
+        plt.xlabel(r"$t$")
+        plt.xlim([0,150])
+        plt.ylabel(ylabel)
+        handles, labels = plt.gca().get_legend_handles_labels()
+        order = [1,3,5,0,2,4,6,7]
+        plt.legend([handles[i] for i in order], [labels[i] for i in order])
+        #plt.legend()
+        plt.show()
+        k+=1
+    
 
 def MG1_priority_theoretical(class_i, lambda_,  mu_, sigma_squared_pkt_len):
     #! gives theoretical plots needed for plot_MG1_priority_file()
