@@ -152,7 +152,7 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf",color_choi
     #! SINGLE CLASS
     #! Only use for files consisting of one class (could be used for files with priority, but will not differentiate between them)
     #! Gives one plot with simulated values of specific plot type and theoretical one if it is implemeted, if distribution is changed over time the plots will lay on top of each other
-    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4) )
+    plt.figure(num=filename_input.split("/")[0],figsize=(5, 4))
     add_colors_to_plot(choice=color_choice)
     # GATHER VARIABLES AND DATA 
     with open(filename_input, 'r') as f_input:
@@ -655,16 +655,29 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
 
     lambda_i = [[sum(l) for l in sublist] for sublist in split_lambda_list]
     mu_i = [[1/np.average(u) for u in sublist] for sublist in split_mu_list]
-    '''
+    
     print("Theoretical lambdas:", lambda_i)
-    print("  Simulated lambdas:", simulated_lambdas)
+    #print("  Simulated lambdas:", simulated_lambdas)
     print("    Theoretical mus:", mu_i)
-    print("      Simulated mus:", simulated_mus)
-    '''
+    #print("      Simulated mus:", simulated_mus)
+    
+    
 
     for i in range(len(num_pkts)):
-        W_bar_i = [np.average([item[2] for item in l]) for l in big_split[i]] # Gather W_bar_i
-        GG1_priority_theoretical(priority_classes[i], lambda_i[i], 0, mu_i[i], 0, W_bar_i)
+        if dist_type == "GG":
+            W_bar_i = [np.average([item[2] for item in l]) for l in big_split[i]] # Gather W_bar_i
+            print("Calculated W_bar_i:", W_bar_i)
+            GG1_priority_theoretical(priority_classes[i], lambda_i[i], 0, mu_i[i], 0, W_bar_i)
+        elif dist_type == "MG":
+            sigma_squared_pkt_len=[0,0,0]
+            if "sigma_squared_pkt_len" in input_variables:
+                sublist = input_variables["sigma_squared_pkt_len"][i]
+                sublist_split = [[] for _ in priority_classes[i]]
+                for j in range(len(sublist)):
+                    sublist_split[num_sources[i][j]-1].append(sublist[j])
+                sigma_squared_pkt_len = [np.average(ssublist) for ssublist in sublist_split]
+            print(" Theoretical sigmas:", sigma_squared_pkt_len)
+            MG1_priority_theoretical(class_i=priority_classes[i], lambda_=lambda_i[i],  mu_=mu_i[i], sigma_squared_pkt_len=sigma_squared_pkt_len)
 
     #---------------------------------------------------------------------------------------
 
@@ -675,7 +688,7 @@ def plot_multiple_sources_with_priority(filename_input, filename_data, plot_type
     handles, labels = plt.gca().get_legend_handles_labels()
     order = [3,4,5,0,1,2]
     plt.legend([handles[i] for i in order], [labels[i] for i in order])
-    plt.xlim([0,300])
+    plt.xlim([0,200])
     
     plt.show()
     # ------

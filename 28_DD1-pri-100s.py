@@ -3,6 +3,7 @@ from run_sim_generic import run_simulator
 from plot_generic import *
 from print_generic_stats import generic_stats
 from create_list_with_given_average import create_list_with_given_average
+from create_sigma import create_sigma
 
 n = 100
 folder = "28_DD1-pri-100s/"
@@ -19,10 +20,10 @@ type_pkt_ia = "D"
 avg_pkt_len_bits = create_list_with_given_average(n=n, avg=17.5,type="mu")
 type_pkt_len = "D"
 
+avg_pkt_len_bits = [*avg_pkt_len_bits, *avg_pkt_len_bits, *avg_pkt_len_bits]
+dist_type_pkt_len = [*[type_pkt_len]*n, *[type_pkt_len]*n, *[type_pkt_len]*n]
+sigma_squared_pkt_len = create_sigma(avg_pkt_len_bits, dist_type_pkt_len)
 
-
-print(sum([1/l for l in avg_pkt_ia_time1]), sum([1/l for l in avg_pkt_ia_time2]), sum([1/l for l in avg_pkt_ia_time3]))
-print(1/sum(avg_pkt_len_bits))
 
 
 input_variables = {
@@ -30,9 +31,9 @@ input_variables = {
     "sigma_squared_pkt_ia_time":[],
     "dist_type_pkt_ia_time": [[*[type_pkt_ia]*n, *[type_pkt_ia]*n, *[type_pkt_ia]*n]], 
 
-    "avg_pkt_len_bits": [[*avg_pkt_len_bits, *avg_pkt_len_bits, *avg_pkt_len_bits]], 
-    "sigma_squared_pkt_len": [],
-    "dist_type_pkt_len": [[*[type_pkt_len]*n, *[type_pkt_len]*n, *[type_pkt_len]*n]], 
+    "avg_pkt_len_bits": [avg_pkt_len_bits], 
+    "sigma_squared_pkt_len": [sigma_squared_pkt_len],
+    "dist_type_pkt_len": [dist_type_pkt_len],  
 
     "capacity": 1, 
     "num_pkts": [[*[10000]*n ,*[10000]*n ,*[10000]*n]],
@@ -45,7 +46,8 @@ if not os.path.exists(folder):
 
 
 
-#write_input_file(input_variables, folder+"input.json")
+write_input_file(input_variables, folder+"input.json")
 #run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 
-plot_multiple_sources_with_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf")
+plot_multiple_sources_with_priority(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf", dist_type="MG")
+
