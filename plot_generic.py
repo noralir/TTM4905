@@ -202,7 +202,8 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf",color_choi
 
     
     add_labels_to_plot(dist_type, plot_type)
-    plt.xlim([0,100])
+    #plt.xlim([0,100])
+
     #plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7])
     #plt.yticks([0.00,0.01,0.02,0.03])
     #plt.yticks([0.0,0.2,0.4,0.6,0.8,1.0])
@@ -554,7 +555,8 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
             plt.plot(t,y,label=label1, zorder=0)
                       
     #------------------------------------------------------------------
-
+    theoretical_lambda_list, theoretical_mu_list = calculate_theoretical_lambda_and_mu(filename_input=filename_input) 
+    print("Theoretical lambdas", theoretical_lambda_list)
 
     #Print info
     '''
