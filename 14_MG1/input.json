@@ -1,6 +1,6 @@
 {
     "lambda": [0.025],
-    "avg_pkt_ia_time": [30], 
+    "avg_pkt_ia_time": [20], 
     "dist_type_pkt_ia_time": ["M"], 
 
     "avg_pkt_len_bits": [12], 

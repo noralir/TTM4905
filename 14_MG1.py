@@ -4,8 +4,8 @@ from print_generic_stats import generic_stats
 
 folder = "14_MG1/"
 
-#run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
+run_simulator(folder=folder, input_file="input.json", runs=1, data=True, nth=False)
 
 #plot_gen_file(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", plot_type="wait_pdf")
 
-generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv")
+generic_stats(filename_input=folder+"input.json", filename_data=folder+"data/0.csv", dist_type="MG")
