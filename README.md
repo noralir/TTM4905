@@ -13,6 +13,8 @@ The results are plotted using the wanted function from `plot_generic.py`. Again,
 
 ## Requirements
 The following libraries are needed to run this project:
+```
     pip install simpy
     pip install numpy
     pip install matplotlib
+```
