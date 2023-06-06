@@ -202,11 +202,11 @@ def plot_gen_file(filename_input, filename_data, plot_type="wait_cdf",color_choi
 
     
     add_labels_to_plot(dist_type, plot_type)
-    #plt.xlim([0,100])
+    plt.xlim([0,10])
 
-    #plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7])
+    #plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1])
     #plt.yticks([0.00,0.01,0.02,0.03])
-    #plt.yticks([0.0,0.2,0.4,0.6,0.8,1.0])
+    plt.yticks([0.0,0.2,0.4,0.6,0.8,1.0])
     plt.show()
     # ------------------------------------------------------------------------------------------------------------------------- #
     
@@ -543,6 +543,8 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     t = np.arange(0, 300, 1)
     t = np.arange(0, int(max_delay), 1)
 
+    print("max delay =", max_delay)
+
     if dist_type == "MD":
         t = np.arange(0, 145, 1)
         #plt.yscale("log")
@@ -575,7 +577,7 @@ def plot_multiple_sources_no_priority(filename_input, filename_data, plot_type="
     if show_plot:
         plt.title("", size=20)
         add_labels_to_plot(plot_type=plot_type, dist_type=dist_type)
-        plt.xlim([0,100])
+        plt.xlim([0,64])
         plt.show()
     # -------
 
